@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Circle">
+
+
+	<typeAlias alias="Circle" type="com.chj.entity.Circle" />
+	<resultMap class="Circle" id="CircleData">
+		<result property="circleId" column="circle_id" />
+		<result property="name" column="name" />
+		<result property="summary" column="summary" />
+		<result property="userId" column="user_id" />
+		<result property="createTime" column="create_time" />
+		<result property="level" column="level" />
+		<result property="status" column="status" />
+		<result property="type" column="type" />
+		<result property="circleContent" column="circle_content" />
+		<result property="circleImage" column="circle_image" />
+		<result property="circleViews" column="circle_views" />
+		<result property="isCheck" column="is_check" />
+		<result property="companyId" column="company_id"/>
+		<result property="examineResult" column="examine_result"/>
+
+		<result property="nickName" column="user_id" select="Circle.selectUserNickName" />
+		<result property="topicCount" column="circle_id" select="Circle.selectTopicCount" />
+		<result property="userCount" column="circle_id" select="Circle.selectUserCount" />
+		<result property="tagList" column="circle_id" select="Circle.selectCircleTagList" />
+
+	</resultMap>
+
+	<typeAlias alias="CirclePart" type="com.chj.entity.CirclePart" />
+	<resultMap class="CirclePart" id="CirclePartData">
+		<result property="circleId" column="circle_id" />
+		<result property="name" column="name" />
+		<result property="summary" column="summary" />
+		<result property="userId" column="user_id" />
+		<result property="createTime" column="create_time" />
+		<result property="level" column="level" />
+		<result property="status" column="status" />
+		<result property="type" column="type" />
+		<result property="circleImage" column="circle_image" />
+		<result property="circleViews" column="circle_views" />
+		<result property="isCheck" column="is_check" />
+		<result property="companyId" column="company_id"/>
+		<result property="examineResult" column="examine_result"/>
+
+		<result property="nickName" column="user_id" select="Circle.selectUserNickName" />
+		<result property="topicCount" column="circle_id" select="Circle.selectTopicCount" />
+		<result property="userCount" column="circle_id" select="Circle.selectUserCount" />
+		<result property="tagList" column="circle_id" select="Circle.selectCircleTagList" />
+
+	</resultMap>
+
+	<typeAlias alias="CircleCreateUser" type="com.chj.entity.CircleCreateUser" />
+	<resultMap class="CircleCreateUser" id="CircleCreateUserData">
+		<result property="userId" column="user_id" />
+		<result property="nickName" column="nick_name" />
+		<result property="headPicture" column="head_picture" />
+		<result property="info" column="info" />
+		<result property="activeValue" column="active_value" />
+		<result property="sincerityValue" column="sincerity_value" />
+	</resultMap>
+
+	<typeAlias alias="UserCollection" type="com.chj.entity.UserCollection" />
+	<resultMap class="UserCollection" id="UserCollectionRes">
+		<result property="userId" column="user_id" />
+		<result property="objectId" column="object_id" />
+		<result property="type" column="type" />
+		<result property="createTime" column="create_time" />
+
+	</resultMap>
+	
+	<sql id="dataFilter">
+		AND ((examine_result=1 and status !='4') or(examine_result!='1' and
+		(status ='4' or status ='3' Or status ='2'))) and delete_flag!=2
+		and (company_id not in(select company_id from tb_company where delete_flag=2 or (status=3 and examine_result=1))
+		or company_id is null)
+	</sql>
+	
+	
+	<sql id="orderCondition">
+		<isEqual prepend="" property="orderType" compareValue="time">
+			order by
+			circle_id $order$
+		</isEqual>
+		<isEqual prepend="" property="orderType" compareValue="browse">
+			order by
+			circle_views $order$
+		</isEqual>
+		<isEqual prepend="" property="orderType" compareValue="userCount">
+			order by
+			level $order$
+		</isEqual>
+	</sql>
+
+	<!-- 首页关键字查询 -->
+	<select id="findCircleByKeyword" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top $size$ circle_views as browseCount,circle_id as
+		circleId,name as title,create_time as createTime,status,examine_result as examineResult,
+		user_id as userId from(select
+		ROW_NUMBER()over(
+		<include refid="Circle.orderCondition" />
+		)rowid,* from
+		(select
+		top ($startIndex$+$size$)
+		circle_views,circle_id,name,create_time,status,examine_result,user_id from tb_circle t where 1=1 
+		<include refid="Circle.dataFilter"/>
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(name like	'%'+#keyword#+'%'  or circle_content like '%'+#keyword#+'%')
+			</isNotEmpty>
+		</dynamic>
+		<include refid="Circle.orderCondition" />
+		) ss) ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+
+	<!-- 好友主页的新建圈子 -->
+	<select id="selectUserFriendHomeCircleList" parameterClass="java.util.HashMap"
+		resultMap="CirclePartData">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		circle_id
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from
+		tb_circle t
+		where
+		t.status !='1' and t.status!='6' and t.user_id
+		=#userId#
+		order by circle_id desc) ss) ssss
+		where
+		ssss.rowid>$startIndex$
+	</select>
+
+	<!-- 好友的新建圈子 -->
+	<select id="selectUserFriendCircleList" parameterClass="java.util.HashMap"
+		resultMap="CirclePartData">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		circle_id
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from
+		tb_circle t
+		where
+		t.status !='1' and t.status!='6' and t.user_id
+		!=#userId# and
+		exists(
+		select t1.* from tb_user_friend t1 where
+		user_id=#userId# and
+		t.user_id=t1.friend_id)
+		order by circle_id desc)
+		ss) ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<select id="selectUserCollectionCircle" parameterClass="java.util.HashMap"
+		resultMap="UserCollectionRes">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		create_time
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from
+		tb_user_collection t
+		where user_id=#userId# and type=2 and
+		do_type=#dotype#
+		and exists(select t1.circle_id from tb_circle t1 where
+		t.object_id=t1.circle_id)
+		order by create_time desc) ss) ssss
+		where
+		ssss.rowid>$startIndex$
+	</select>
+
+	<select id="findCirclePartById" parameterClass="Long" resultMap="CirclePartData">
+		select * from tb_circle where circle_id=#value#
+	</select>
+
+	<select id="selectUserNickName" parameterClass="Long"
+		resultClass="String">
+		select nick_name from tb_user where user_id=#value#
+	</select>
+	<select id="selectCircleCreateUser" parameterClass="Long"
+		resultMap="CircleCreateUserData">
+		select * from tb_user where user_id = #value#
+	</select>
+	<select id="selectUserTagList" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select top 3 s.tag_id as tagId,s.tag_name as tagName from
+		tb_tag s
+		where exists(select tag_id as tagId from tb_user_tag t where
+		t.user_id=#value# and s.tag_id=t.tag_id)
+	</select>
+	<select id="selectUserFriendCount" parameterClass="Long"
+		resultClass="Long">
+		select count(*) from tb_user_friend where user_id =#value#
+	</select>
+	<select id="selectHasUser" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_user_friend where user_id
+		=#userId# and friend_id=#friendId#
+	</select>
+
+	<select id="findMyJionCircle" parameterClass="java.util.HashMap"
+		resultMap="CirclePartData">
+		
+		select * from
+		(select row_number()over(<include refid="Circle.orderCondition" />)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_circle t
+		where 1=1 <include refid="Circle.dataFilter" />
+		<dynamic prepend="">
+       <isEqual prepend="AND" property="userCircle" compareValue="1">
+         user_id=#userId#
+       </isEqual>
+       <isEqual prepend="AND" property="userCircle" compareValue="0">
+         exists(select s.circle_id from tb_circle_user s  where  s.circle_id=t.circle_id and s.user_id=#userId# and s.status not in(4,5))
+       </isEqual>
+       
+	<isNotEmpty property="timeSpace">
+       <isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  create_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  create_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  create_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  create_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]> 
+       </isEqual> 
+      </isNotEmpty>
+      
+      <isNotEmpty property="tagIds" prepend="AND">
+         exists(select r.tag_id from tb_circle_tag r where r.delete_flag!=2 and  r.circle_id=t.circle_id AND r.tag_id in($tagIds$))
+      </isNotEmpty>
+		</dynamic>
+		<include refid="Circle.orderCondition" />) ss
+		) sss
+		where
+		sss.rowId > $startIndex$
+
+	</select>
+
+	<select id="findMyJionCircleCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_circle_user t
+		where
+		(t.status='3' or t.status='1') and t.user_id=#userId# and exists(select circle_id from tb_circle t1
+		where
+		t1.status !='1' and t1.status !='6' and
+		t.circle_id=t1.circle_id)
+	</select>
+	
+	<select id="findCircleRecommendList" resultMap="CirclePartData">
+		select top 3 *
+		from tb_circle where is_extend =1
+		AND (examine_result=1 and status !='3')  and delete_flag!=2
+		order by circle_id desc
+	</select>
+	<!--首页推荐 -->
+	<select id="findHomeCircleList" resultMap="CirclePartData">
+	  select top 3 *
+		from tb_circle where (examine_result=1 and status !='3')  and delete_flag!=2
+		order by circle_id desc
+	</select>
+	<select id="findCircleRecommendForUser" parameterClass="java.util.HashMap" resultMap="CirclePartData">
+		select * from tb_circle where circle_id in(
+		select top $size$
+		a.circle_id from tb_circle_tag as a,
+		(select top 100 COUNT(*) as
+		count,tag_id from tb_circle_tag
+		where tag_id in(
+		select tag_id from
+		tb_user_tag where user_id = #userId#)
+		group by tag_id order by count
+		desc) as g where a.tag_id = g.tag_id order
+		by g.count desc)
+		<isNotEmpty prepend="AND" property="circleId">
+			circle_id!=#circleId#
+		</isNotEmpty>
+		<include refid="Circle.dataFilter"/>
+	</select>
+	
+	<select id="findCircleList" parameterClass="java.util.HashMap"
+		resultMap="CirclePartData">
+		select * from
+		(select row_number()over(<include refid="Circle.orderCondition" />)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_circle t
+		where 1=1 <include refid="Circle.dataFilter" />
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' )
+			</isNotEmpty>
+	<isNotEmpty property="timeSpace">
+       <isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  create_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  create_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  create_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  create_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]> 
+       </isEqual> 
+      </isNotEmpty>
+      
+      <isNotEmpty property="tagIds" prepend="AND">
+         exists(select r.tag_id from tb_circle_tag r where r.delete_flag!=2 and  r.circle_id=t.circle_id AND r.tag_id in($tagIds$))
+      </isNotEmpty>
+		</dynamic>
+		<include refid="Circle.orderCondition" />) ss
+		) sss
+		where
+		sss.rowId > $startIndex$
+	</select>
+
+	<select id="findCircleListCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_circle t
+		where 1=1 <include refid="Circle.dataFilter" />
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' )
+			</isNotEmpty>
+			
+	<isNotEmpty property="timeSpace">
+       <isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  create_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  create_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  create_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  create_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]> 
+       </isEqual> 
+      </isNotEmpty>
+      
+      <isNotEmpty property="tagIds" prepend="AND">
+         exists(select r.tag_id from tb_circle_tag r where r.delete_flag!=2 and  r.circle_id=t.circle_id AND r.tag_id in($tagIds$))
+      </isNotEmpty>
+      
+		</dynamic>
+
+	</select>
+
+	<!-- 按照用户数排序 -->
+	<select id="findHotCircleList" parameterClass="java.util.HashMap"
+		resultMap="CirclePartData">
+		select * from tb_circle ssss where exists
+		(select $size$ from
+		(select row_number()over(order by count desc)rowId,*
+		from (select top
+		($startIndex$+$size$) COUNT(*) as count,circle_id from
+		tb_circle_user t
+		where exists(select circle_id from tb_circle t1 where t1.status !='1'
+		and
+		t1.status !='6' and t.circle_id=t1.circle_id)
+		group by circle_id
+		order by count desc) ss
+		) sss
+		where sss.rowId > $startIndex$ and
+		sss.circle_id=ssss.circle_id)
+	</select>
+
+	<select id="selectTopicCount" parameterClass="Long" resultClass="Long">
+		select count(*) from tb_topic t
+		where t.circle_id=#value# and t.delete_flag=1
+	</select>
+	<select id="selectUserCount" parameterClass="Long" resultClass="Long">
+		select count(*) from tb_circle_user t
+		where t.circle_id=#value#
+	</select>
+	<select id="selectCircleTagList" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select tag_id as tagId,tag_name as tagName from tb_tag s
+		where s.tag_id in(select t.tag_id from tb_circle_tag t
+		where
+		t.circle_id=#value#)
+	</select>
+	<insert id="insertUserCircle" parameterClass="java.util.HashMap">
+		insert into
+		tb_circle_user(circle_id,user_id,create_time,circle_role,status,delete_flag)
+		values(#circleId#,#userId#,#time#,#circleRole#,#status#,1)
+	</insert>
+	<select id="findCircleUserCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_circle_user t
+		where
+		t.circle_id=#circleId# and t.user_id=#userId#
+	</select>
+	<select id="findCircleById" parameterClass="Long" resultMap="CircleData">
+		select * from tb_circle t where t.circle_id=#circleId#
+	</select>
+
+	<select id="findCircleUserList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select t.user_id as userId,t.nick_name as
+		nickName,t.head_picture as
+		headPicture
+		from tb_user t where user_id
+		in(select user_id from (select
+		row_number()over(order by create_time
+		desc)rowId,*
+		from (select top ($startIndex$+$size$) * from
+		tb_circle_user s where s.circle_id=#circleId# and delete_flag!=2 and status ='3'
+		order by s.create_time
+		desc) ss
+		) sss
+		where sss.rowId > $startIndex$)
+	</select>
+
+	<insert id="insertCircle" parameterClass="Circle">
+		insert into
+		tb_circle(name,summary,circle_content,user_id,level,status,type,circle_views,circle_image,create_time,is_check)
+		values(#name#,#summary#,#circleContent#,#userId#,#level#,#status#,#type#,#circleViews#,#circleImage#,#createTime#,#isCheck#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+	<insert id="insertCircleUser" parameterClass="java.util.HashMap">
+		insert into
+		tb_circle_user(user_id,circle_id,create_time,status)
+		values(#userId#,#circleId#,#createTime#,#status#)
+	</insert>
+
+	<insert id="insertCircleTag" parameterClass="java.util.HashMap">
+		insert into
+		tb_circle_tag(tag_id,circle_id,add_time,status)
+		values(#tagId#,#circleId#,#addTime#,#status#)
+	</insert>
+
+	<insert id="insertCircleCardImage" parameterClass="java.util.HashMap" >
+	insert into tb_circle_cardimage(user_id,circle_id,card_path,create_time) 
+   	values(#userId#,#circleId#,#cardPath#,#createTime#)
+	</insert>
+	
+	<!-- 相关圈子 -->
+	<select id="findCircleRelative" parameterClass="Long" resultMap="CirclePartData">
+		select top 1 * from tb_circle where circle_id in(
+		select top 1
+		a.circle_id from tb_circle_tag as a,
+		(select top 100 COUNT(*) as
+		count,tag_id from tb_circle_tag
+		where tag_id in(
+		select tag_id from
+		tb_circle_tag where circle_id = #value#)
+		group by tag_id order by count
+		desc) as g where a.tag_id = g.tag_id and
+		a.circle_id !=#value# order by
+		g.count desc)
+	</select>
+
+	<select id="findCircleRecommend" parameterClass="java.util.HashMap"
+		resultMap="CirclePartData">
+		select * from tb_circle where circle_id in(
+		select top 1
+		a.circle_id from tb_circle_tag as a,
+		(select top 100 COUNT(*) as
+		count,tag_id from tb_circle_tag
+		where tag_id in(
+		select tag_id from
+		tb_user_tag where user_id = #userId#)
+		group by tag_id order by count
+		desc) as g where a.tag_id = g.tag_id order
+		by g.count desc) and
+		user_id!=#userId# and circle_id!=#circleId#
+	</select>
+
+	<select id="findTheCirclePerple" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from (select row_number()over(order by
+		create_time desc)rowId,* from (select top ($startIndex$+$size$) * from
+		(select *
+		from tb_circle_user where circle_id=#circleId# and
+		status=#status#) t order by create_time desc) ss ) sss where sss.rowId
+		>$startIndex$
+	</select>
+	<select id="findTheCirclePerpleCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select COUNT(*) from tb_circle_user where
+		circle_id=#circleId# and status=#status#
+	</select>
+	<update id="updateCirclePerple" parameterClass="java.util.HashMap">
+		update
+		tb_circle_user set $filed$=#status# where user_id=#userId# and
+		circle_id=#circleId#
+	</update>
+	<select id="selectCircleManager" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select *
+		from tb_circle_user where circle_id=#circleId# and
+		circle_role=#circleRole# and status=3
+	</select>
+	<select id="selectCircleUser" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select user_id from tb_circle_user where circle_id=#circleId# and status=3
+	</select>
+	<select id="CircleCreateUser" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select user_id from tb_circle where circle_id=#circleId#	
+	</select>
+	
+	<update id="applyCloseCircle" parameterClass="java.util.HashMap">
+		update
+		tb_circle set status='4',examine_result=3 where
+		circle_id=#circleId# and user_id=#userId#
+	</update>
+	
+	<select id="findCircleUserStatus" parameterClass="java.util.HashMap" resultClass="String">
+	select status from tb_circle_user where circle_id=#circleId# and user_id=#userId#
+	</select>
+	
+	<update id="updateCircleUserStatus" parameterClass="java.util.HashMap">
+		update tb_circle_user set status=#status#,circle_role=#circleRole# where circle_id=#circleId#
+		and user_id=#userId#
+	</update>
+	
+	<select id="findCircleUserRole" parameterClass="java.util.HashMap" resultClass="Integer">
+	select circle_role from tb_circle_user where circle_id=#circleId# and user_id=#userId#
+	</select>
+	<select id="findCircleUserIdByCircleId" parameterClass="Long" resultClass="Long">
+	select user_id from tb_circle where circle_id=#value#
+	</select>
+	<update id="updateCircleStatus" parameterClass="java.util.HashMap">
+	 update tb_circle set status=#status#,examine_result=#examineResult# where circle_id=#circleId#
+	</update>
+	
+	<select id="findCircleUserCardImage" parameterClass="Long" resultClass="String">
+	  select card_path from tb_circle_cardimage where circle_id=#value# and delete_flag!=2
+	</select>
+	<update id="updateCircle" parameterClass="Circle">
+		update tb_circle set name=#name#,level=#level#,circle_content=#circleContent#,
+		circle_image=#circleImage#,is_check=#isCheck#,
+		summary=#summary#,status='2',examine_result=3 where circle_id=#circleId#
+    </update>
+	<update id="deleteCardImages" parameterClass="Long">
+		update tb_circle_cardimage SET delete_flag=2 where circle_id=#value#
+	</update>
+	<delete id="deleteCircleTags" parameterClass="Long">
+		delete from tb_circle_tag where circle_id=#value#
+	</delete>
+	<select id="findCircleHotNum" resultClass="Integer">
+	select top 1 circlenum from tb_hot_set 
+	</select>
+	<select id="findCircleUserRemain" parameterClass="Long" resultClass="Long">
+	 select person_num -(select COUNT(*) from tb_circle_user where circle_id=#circleId# and status!='4' and status !='5') from tb_circle_level where type in(
+select level from tb_circle where circle_id=#circleId#) 
+	</select>
+	<select id="findCircleLevelList" resultClass="java.util.HashMap">
+	 select type,person_num as num,info from tb_circle_level order by type
+	</select>
+	
+	
+	<select id="findCircleRecommendIndex" parameterClass="java.util.HashMap"
+		resultMap="CirclePartData">
+		select top $maxNum$ * from tb_circle t where  1=1
+		<include refid="Circle.dataFilter" />
+		<isNotEmpty prepend="AND" property="circleId">
+			circle_id!=#circleId#
+		</isNotEmpty>
+		<isNotEmpty property="ids">
+         and circle_id not in($ids$)
+      </isNotEmpty> 
+		<isEqual property="userId" compareValue="-1">
+         order by circle_id desc
+      </isEqual>
+		<isEqual property="userId" compareValue="0">
+		   and is_extend > 0 order by is_extend asc
+		</isEqual>
+		 <isGreaterThan property="userId" compareValue="0">
+		     and exists(select * from tb_circle_tag t1 where t1.delete_flag=1 
+		     and  t1.circle_id=t.circle_id and 
+		     exists(select t2.tag_id from tb_user_tag t2 where t2.delete_flag=1 and t2.tag_id=t1.tag_id and t2.user_id=#userId#))
+		       order by circle_id desc
+		 </isGreaterThan>
+		
+	</select>
+	
+	<select id="findCircleAndUserTagList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	  select tag_id as tagId,tag_name as tagName from tb_tag t where t.delete_flag=1 
+	  <isNotEmpty property="ids">
+         and t.tag_id not in($ids$)
+      </isNotEmpty> 
+      <isEqual property="userId" compareValue="0">
+         and   exists(select t1.tag_id  from tb_circle_tag t1 where  t.tag_id=t1.tag_id and t1.delete_flag=1  and  t1.circle_id=#circleId#)
+       </isEqual>
+      <isGreaterThan property="userId" compareValue="0">
+        and  exists(select t1.tag_id  from tb_circle_tag t1 where  t.tag_id=t1.tag_id and t1.delete_flag=1  and  t1.circle_id=#circleId#
+	      and exists(select t2.tag_id  from tb_user_tag t2 where t1.tag_id=t2.tag_id and t2.delete_flag=1 and t2.user_id=#userId#))
+        </isGreaterThan>
+	 
+	</select>
+	
+</sqlMap>

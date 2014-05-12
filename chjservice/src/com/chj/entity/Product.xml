@@ -1,0 +1,969 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Product">
+	<typeAlias alias="Product" type="com.chj.entity.Product" />
+
+	<resultMap class="Product" id="ProductRes">
+		<result property="productId" column="product_id" />
+		<result property="productCategoryId" column="product_category_id" />
+		<result property="name" column="name" />
+		<result property="brand" column="brand" />
+		<result property="factory" column="factory" />
+		<result property="place" column="place" />
+		<result property="feature" column="feature" />
+		<result property="summary" column="summary" />
+		<result property="createTime" column="create_time" />
+		<result property="createUserId" column="create_user_id" />
+		<result property="content" column="content" />
+		<result property="lastEditUserId" column="last_edit_user_id" />
+		<result property="companyId" column="company_id" />
+		<result property="shareCount" column="share_count" />
+		<result property="starScore" column="star_score" />
+		<result property="browseCount" column="browse_count" />
+		<result property="companyShopProductId" column="company_shop_product_id" />
+	</resultMap>
+
+	<typeAlias alias="ProductCollection" type="com.chj.entity.ProductCollection" />
+	<resultMap class="ProductCollection" id="ProductCollectionRes">
+		<result property="companyShopProductId" column="company_shop_product_id" />
+		<result property="companyShopId" column="company_shop_id" />
+		<result property="productId" column="product_id" />
+
+		<result property="productInfo" column="product_id"
+			select="Product.findProductInfoById" />
+		<result property="image" column="product_id" select="Product.selProductImage" />
+		<result property="sku" column="company_shop_product_id" select="Product.selSkuByShopProductId" />
+		<result property="tagList" column="product_id" select="Product.selProductTagList" />
+		<result property="commentCount" column="company_shop_product_id"
+			select="Product.selectShopProductCommentCount" />
+	</resultMap>
+
+	<typeAlias alias="UserCollection" type="com.chj.entity.UserCollection" />
+	<resultMap class="UserCollection" id="UserCollectionRes">
+		<result property="userId" column="user_id" />
+		<result property="objectId" column="object_id" />
+		<result property="type" column="type" />
+		<result property="createTime" column="create_time" />
+	</resultMap>
+
+	<typeAlias alias="ProductSku" type="com.chj.entity.ProductSku" />
+	<resultMap class="ProductSku" id="ProductSkuRes">
+		<result property="productSkuId" column="product_sku_id" />
+		<result property="productId" column="product_id" />
+		<result property="skuNo" column="sku_no" />
+		<result property="skuKind" column="sku_kind" />
+		<result property="price" column="price" />
+		<result property="status" column="status" />
+		<result property="oldPrice" column="old_price" />
+		<result property="stock" column="stock" />
+		<result property="companyShopProductSkuId" column="company_shop_product_sku_id" />
+	</resultMap>
+
+
+	<sql id="orderCondition">
+		<isEqual prepend="" property="orderType" compareValue="time">
+			order by
+			company_shop_id $order$
+		</isEqual>
+		<isEqual prepend="" property="orderType" compareValue="browse">
+			order by
+			browse_count $order$
+		</isEqual>
+	</sql>
+
+	<sql id="orderConditionProduct">
+		<isEqual prepend="" property="orderType" compareValue="time">
+			order by
+			company_shop_product_id $order$
+		</isEqual>
+		<isEqual prepend="" property="orderType" compareValue="browse">
+			order by
+			browse_count $order$
+		</isEqual>
+	</sql>
+
+	<sql id="dataFilterComapny">
+		not in(select OrganizationalID from Personnel where Type=1
+		or Type=4 union select company_id from tb_company where delete_flag=2
+		or (status=3 and examine_result=1))
+	</sql>
+
+	<sql id="dataFilter">
+		and (delete_flag!=2 or delete_flag is null)
+	</sql>
+
+	<select id="findAds" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select picture_address as path,link_address as
+		linkAddress,picture_title as title from tb_advertisement_picture_web
+		where delete_flag!=2
+		and picture_address is not null
+		<isEqual property="type" compareValue="1" prepend="AND">
+			style
+			in(11,12,13,14)
+		</isEqual>
+		<isEqual property="type" compareValue="2" prepend="AND">
+			style
+			in(21,22,23)
+		</isEqual>
+		<isEqual property="type" compareValue="3" prepend="AND">
+			style in(31)
+		</isEqual>
+		<isEqual property="type" compareValue="4" prepend="AND">
+			style
+			in(41,42,43)
+		</isEqual>
+		<isEqual property="type" compareValue="5" prepend="AND">
+			style
+			in(51,52,53,54)
+		</isEqual>
+		<isEqual property="type" compareValue="6" prepend="AND">
+			style
+			in(61,62,63,64)
+		</isEqual>
+		<isEqual property="type" compareValue="7" prepend="AND">
+			style
+			in(71,72,73,74)
+		</isEqual>
+		<isEqual property="type" compareValue="8" prepend="AND">
+			style in(81)
+		</isEqual>
+		<isEqual property="type" compareValue="9" prepend="AND">
+			style in(91)
+		</isEqual>
+		<isEqual property="type" compareValue="10" prepend="AND">
+			style
+			in(101)
+		</isEqual>
+	</select>
+
+	<!-- 首页关键字查询 -->
+	<select id="findCompanyShopByKeyword" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top $size$ lat,lng,browse_count as browseCount,company_shop_id
+		as companyShopId,name,address,regist_time as createTime from(select
+		ROW_NUMBER()over(
+		<include refid="Product.orderCondition" />
+		)rowid,* from
+		(select top ($size$+$startIndex$)
+		lat,lng,browse_count,company_shop_id,name,address,regist_time from
+		tb_company_shop t0 where delete_flag!=2 and
+		(((status=1 or status=2) and examine_result=1) or
+		(status=3 and examine_result in(2,3))or (status=4 and examine_result =1))
+		and
+		t0.company_id
+		<include refid="Product.dataFilterComapny" />
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' or content like '%'+#keyword#+'%')
+			</isNotEmpty>
+		</dynamic>
+		<include refid="Product.orderCondition" />
+		)sss)ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<!--首页商品关键字查询 -->
+	<select id="findProductByKeyword" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select yy0.name,yy.* from
+		(select top $size$ * from(select
+		ROW_NUMBER()over(
+		<include refid="Product.orderConditionProduct" />
+		)rowid,* from
+		(select
+		top ($size$+$startIndex$) * from
+		tb_company_shop_product t0 where (t0.delete_flag!=2 Or t0.delete_flag
+		is null) and
+		exists(select y.company_shop_product_id from
+		tb_company_shop_product_sku y
+		where
+		y.company_shop_product_id=t0.company_shop_product_id and
+		y.delete_flag=1)
+		and exists(select t1.product_id from tb_product t1
+		where
+		t0.product_id=t1.product_id
+		and t1.delete_flag!=2 and
+		t1.company_id
+		<include refid="Product.dataFilterComapny" />
+		and t1.delete_flag!=2
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' or content like '%'+#keyword#+'%' or summary like
+				'%'+#keyword#+'%')
+			</isNotEmpty>
+		</dynamic>
+		)
+		<include refid="Product.orderConditionProduct" />
+		)sss)ssss
+		where ssss.rowid>$startIndex$) yy inner join tb_product yy0
+		on
+		yy.product_id=yy0.product_id
+	</select>
+
+
+	<select id="selectCompanyShopTuiguangOther" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select s.company_shop_product_id as companyShopProductId,
+		s.company_shop_id
+		as companyShopId,s.product_id as
+		productId,t.name,t.star_score as
+		starScore
+		from
+		(select top 2
+		company_shop_id,
+		product_id,company_shop_product_id
+		from
+		tb_company_shop_product
+		where
+		company_shop_id=#companyShopId#
+		order by
+		company_shop_product_id desc) s
+		inner join tb_product t on
+		s.product_id=t.product_id where t.delete_flag!=2
+	</select>
+	<select id="selectCompanyShopTuiguang" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select s.company_shop_product_id as companyShopProductId,
+		s.company_shop_id
+		as companyShopId,s.product_id as
+		productId,t.name,t.star_score as
+		starScore
+		from
+		(select top 2
+		company_shop_id,
+		product_id,company_shop_product_id
+		from
+		tb_company_shop_product
+		where
+		company_shop_id=#companyShopId#
+		and
+		function_type='T'
+		order by company_shop_product_id desc) s
+		inner join
+		tb_product t on
+		s.product_id=t.product_id where t.delete_flag!=2
+	</select>
+
+	<insert id="saveOrderProductComment" parameterClass="java.util.Map">
+		insert into
+		tb_product_comment(product_id,user_id,content,comment_time,company_shop_product_id,order_item_id,star)
+		values(#productId#,#userId#,#content#,#commentTime#,#companyShopProductId#,#orderItemId#,#star#)
+	</insert>
+
+	<select id="selectProductListByCategoryIdCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_company_shop_product t
+		where exists(select
+		y.company_shop_product_id from tb_company_shop_product_sku y
+		where
+		y.company_shop_product_id=t.company_shop_product_id and
+		y.delete_flag=1)
+		and exists(select
+		t.product_id from tb_product t1 where
+		t1.delete_flag!=2
+		and
+		t1.product_id=t.product_id and t1.company_id
+		<include refid="Product.dataFilterComapny" />
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="categoryId">
+				t1.product_category_id=#categoryId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentId">
+				exists(select * from
+				tb_product_category t2 where t2.parent_id=#parentId# and
+				t2.product_category_id=t1.product_category_id)
+			</isNotEmpty>
+		</dynamic>
+		)
+
+	</select>
+
+	<select id="selectProductListByCategoryId" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top $size$ ssss.company_shop_product_id as
+		companyShopProductId,
+		ssss.company_shop_id
+		as
+		companyShopId,ssss.product_id as productId from(select
+		ROW_NUMBER()over(order by company_shop_product_id desc)rowid,* from
+		(select top ($startIndex$+$size$) * from tb_company_shop_product t
+		where exists(select y.company_shop_product_id from
+		tb_company_shop_product_sku y
+		where
+		y.company_shop_product_id=t.company_shop_product_id and
+		y.delete_flag=1)
+		and exists(select t.product_id from tb_product t1
+		where
+		t1.delete_flag!=2 and
+		t1.product_id=t.product_id and t1.company_id
+		<include refid="Product.dataFilterComapny" />
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="categoryId">
+				t1.product_category_id=#categoryId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="parentId">
+				exists(select * from
+				tb_product_category t2 where t2.parent_id=#parentId# and
+				t2.product_category_id=t1.product_category_id)
+			</isNotEmpty>
+		</dynamic>
+		)
+		order by t.company_shop_product_id desc) ss) ssss
+		where
+		ssss.rowid>$startIndex$
+	</select>
+	<select id="selectCategoryImagePathById" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select image,name,product_category_id as productCategoryId
+		from
+		tb_product_category where delete_flag!=2 and
+		product_category_id=#value#
+	</select>
+	<select id="selectProductCategorySecond" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select product_category_id as productCategoryId,name from
+		tb_product_category where delete_flag!=2 and parent_id=#value#
+	</select>
+	<select id="selectProductCategoryFirst" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top $size$ product_category_id as
+		productCategoryId,name,image,color
+		from(select
+		ROW_NUMBER()over(order by
+		product_category_id desc)rowid,*
+		from
+		(select top ($startIndex$+$size$)
+		product_category_id,name,image,color from tb_product_category
+		where
+		parent_id=0 and delete_flag!=2
+		order by product_category_id desc) ss)
+		ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<select id="selectShopProductCommentCount" parameterClass="Long"
+		resultClass="Long">
+		select COUNT(*) from tb_company_shop_product_comment where
+		company_shop_product_id=#value#
+	</select>
+
+
+	<select id="selSkuByShopProductId" parameterClass="Long"
+		resultMap="ProductSkuRes">
+		select top 1 s.*,t.stock,t.company_shop_product_sku_id from
+		tb_company_shop_product_sku t inner join tb_product_sku s
+		on
+		s.product_sku_id=t.product_sku_id where
+		t.company_shop_product_id=#value# order by s.price
+	</select>
+
+	<select id="findProductInfoById" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select name,browse_count as browseCount from tb_product
+		where
+		product_id=#value#
+	</select>
+
+	<select id="findProductCollectionPartById" parameterClass="Long"
+		resultMap="ProductCollectionRes">
+		select * from tb_company_shop_product where
+		company_shop_product_id=#value#
+	</select>
+	<select id="selectUserCollectionProduct" parameterClass="java.util.HashMap"
+		resultMap="UserCollectionRes">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		create_time
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from
+		tb_user_collection t
+		where delete_flag!=2 and user_id=#userId# and
+		type=5 and do_type=#dotype#
+		and exists(select
+		t1.company_shop_product_id from tb_company_shop_product t1 where
+		t.object_id=t1.company_shop_product_id)
+		order by create_time desc) ss)
+		ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<select id="selTop4ProductByFunction" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top $maxNum$ s.company_shop_product_id as companyShopProductId,
+		s.company_shop_id
+		as companyShopId,s.product_id as productId from
+		tb_company_shop_product s
+		where delete_flag!=2 and
+		exists(select
+		ff.product_id from tb_product ff where
+		ff.product_id=s.product_id and
+		ff.delete_flag!=2 and ff.company_id
+		<include refid="Product.dataFilterComapny" />
+		)
+		<isEqual property="functionType" compareValue="C">
+			and
+			function_type =#functionType#
+		</isEqual>
+		<isEqual property="functionType" compareValue="T">
+			and
+			function_type =#functionType#
+		</isEqual>
+		<isEqual property="functionType" compareValue="W">
+			and
+			((function_type !='T' and function_type!='C') or function_type is
+			null)
+		</isEqual>
+		<isNotEmpty property="ids">
+			and company_shop_product_id not
+			in($ids$)
+		</isNotEmpty>
+		<isEqual property="userId" compareValue="-1">
+			order by
+			company_shop_product_id desc
+		</isEqual>
+		<isEqual property="userId" compareValue="0">
+			<isEqual property="functionType" compareValue="C">
+				and
+				order_field_function > 0 order by order_field_function asc
+			</isEqual>
+			<isEqual property="functionType" compareValue="T">
+				and
+				order_field_function > 0 order by order_field_function asc
+			</isEqual>
+			<isEqual property="functionType" compareValue="W">
+				and
+				order_field_category > 0 order by order_field_category asc
+			</isEqual>
+		</isEqual>
+		<isGreaterThan property="userId" compareValue="0">
+			and
+			exists(select t1.tag_id from tb_product_tag t1 where
+			t1.delete_flag=1
+			and t1.product_id=s.product_id
+			and exists(select t2.tag_id from
+			tb_user_tag t2 where
+			t1.tag_id=t2.tag_id and t2.delete_flag=1 and
+			t2.user_id=#userId#))
+			order by company_shop_product_id desc
+		</isGreaterThan>
+
+	</select>
+	<select id="selTop4ProductByCategory" resultClass="java.util.HashMap">
+		select
+		s.company_shop_product_id as companyShopProductId,
+		s.company_shop_id
+		as companyShopId,s.product_id as productId,t.name
+		from
+		(select top 4
+		company_shop_id, product_id,company_shop_product_id
+		from
+		tb_company_shop_product t
+		where t.delete_flag!=2 and exists(select
+		s.product_id from
+		tb_product s
+		where s.delete_flag!=2 and
+		s.product_id=t.product_id and s.company_id
+		<include refid="Product.dataFilterComapny" />
+		)
+		order by order_field_category
+		desc,company_shop_product_id desc) s
+		inner join tb_product t on
+		s.product_id=t.product_id where
+		t.delete_flag!=2
+	</select>
+	<select id="selProductImage" parameterClass="Long" resultClass="String">
+		select top 1 file_path from tb_product_image
+		where product_id =#value#
+	</select>
+
+	<select id="selTop4ProductByUserTag" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select t3.company_shop_product_id as companyShopProductId,
+		t3.company_shop_id as companyShopId, s.product_id as productId,s.name
+		as name,s.browse_count as browseCount,s.star_score as starScore from
+		tb_product s
+		inner join (select top 4 * from tb_company_shop_product t1
+		where t1.delete_flag!=2 and exists(
+		select t2.product_id from (select
+		distinct t.product_id
+		from
+		tb_product_tag t where
+		t.tag_id in(select
+		tag_id from tb_user_tag
+		where user_id=#value#)) t2 where
+		t2.product_id=t1.product_id) order by
+		t1.company_shop_product_id
+		desc)t3
+		on s.product_id = t3.product_id and
+		s.company_id
+		<include refid="Product.dataFilterComapny" />
+		where s.delete_flag!=2
+	</select>
+
+	<select id="selProductTagList" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select tag_name as tagName,tag_id as tagId from tb_tag t
+		where t.delete_flag=1 and
+		exists(select s.product_id from
+		tb_product_tag s where s.delete_flag=1 and s.product_id=#value#
+		and
+		s.tag_id=t.tag_id)
+	</select>
+
+	<select id="selProductCommentCount" parameterClass="Long"
+		resultClass="Long">
+		select count(*) from tb_product_comment where
+		company_shop_product_id=#value# and delete_flag!=2
+	</select>
+
+	<select id="selProductCommentCountByUserId" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_product_comment where
+		company_shop_product_id=#companyShopProductId# and user_id=#userId#
+		and order_item_id=#orderItemId# and delete_flag!=2
+	</select>
+
+	<select id="selProductTuiguangList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select t4.company_shop_product_id as companyShopProductId,
+		t4.company_shop_id as companyShopId, t4.product_id as
+		productId,t4.name from
+		(select row_number()over(order by
+		company_shop_product_id desc)rowId,* from
+		(select top
+		($startIndex$+$size$) t1.* ,t2.name from
+		(select t.* from
+		tb_company_shop_product t where function_type
+		=#functionType# and
+		t.delete_flag!=2
+		and exists(select y.company_shop_product_id from
+		tb_company_shop_product_sku y
+		where
+		y.company_shop_product_id=t.company_shop_product_id and
+		y.delete_flag=1)) t1,
+		(select name,product_id from tb_product rr where
+		rr.delete_flag!=2 and
+		company_id
+		<include refid="Product.dataFilterComapny" />
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' )
+			</isNotEmpty>
+
+			<isNotEmpty property="timeSpace">
+				<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  create_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  create_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  create_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  create_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+				</isEqual>
+			</isNotEmpty>
+
+			<isNotEmpty property="tagIds" prepend="AND">
+				exists(select
+				r.tag_id from tb_product_tag r where r.delete_flag!=2 and
+				r.product_id=rr.product_id AND r.tag_id in($tagIds$))
+			</isNotEmpty>
+
+		</dynamic>
+		)t2
+		where t1.product_id=t2.product_id order by
+		t1.company_shop_product_id desc)
+		t3) t4
+		where t4.rowId>$startIndex$
+	</select>
+
+	<select id="selProductTuiguangListCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select COUNT(*) from tb_company_shop_product t1 where function_type =
+		#functionType# and t1.delete_flag!=2
+		and exists(select
+		y.company_shop_product_id from tb_company_shop_product_sku y
+		where
+		y.company_shop_product_id=t1.company_shop_product_id and
+		y.delete_flag=1)
+		and exists(select * from tb_product t2 where
+		t2.delete_flag!=2 and
+		t2.product_id=t1.product_id and t2.company_id
+		<include refid="Product.dataFilterComapny" />
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' )
+			</isNotEmpty>
+			<isNotEmpty property="timeSpace">
+				<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  create_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  create_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  create_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  create_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+				</isEqual>
+			</isNotEmpty>
+
+			<isNotEmpty property="tagIds" prepend="AND">
+				exists(select
+				r.tag_id from tb_product_tag r where r.delete_flag!=2 and
+				r.product_id=t2.product_id AND r.tag_id in($tagIds$))
+			</isNotEmpty>
+		</dynamic>
+		)
+	</select>
+
+	<select id="selProductByUserTag" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select t4.company_shop_product_id as companyShopProductId,
+		t4.company_shop_id as companyShopId, t4.product_id as
+		productId,t4.name from
+		(select row_number()over(order by
+		t3.company_shop_product_id desc)rowId,*
+		from
+		(select top
+		($startIndex$+$size$) t1.* ,t2.name from
+		(select t.* from (select *
+		from tb_company_shop_product t11 where t11.delete_flag!=2 and exists(
+		select t22.product_id
+		from (select distinct t33.product_id from
+		tb_product_tag t33
+		where
+		t33.tag_id in(select tag_id from tb_user_tag
+		where user_id=#userId#))
+		t22
+		where t22.product_id=t11.product_id))
+		t) t1,
+		(select name,product_id
+		from tb_product where delete_flag!=2
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' )
+			</isNotEmpty>
+		</dynamic>
+		) t2
+		where t1.product_id=t2.product_id order by
+		t1.company_shop_product_id desc)
+		t3) t4
+		where t4.rowId>$startIndex$
+	</select>
+
+	<select id="selProductByUserTagCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select COUNT(*) from
+		(select t.* from (select * from
+		tb_company_shop_product t11 where t11.delete_flag!=2 and exists(
+		select t22.product_id from
+		(select distinct t33.product_id from
+		tb_product_tag t33
+		where t33.tag_id
+		in(select tag_id from tb_user_tag
+		where user_id=#userId#))
+		t22
+		where
+		t22.product_id=t11.product_id))
+		t) t1,
+		(select name,product_id from
+		tb_product where delete_flag!=2
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' )
+			</isNotEmpty>
+		</dynamic>
+		)t2
+		where t1.product_id=t2.product_id
+	</select>
+
+	<select id="selectCategoryName" parameterClass="Long"
+		resultClass="String">
+		select name from tb_product_category where
+		product_category_id=#value#
+	</select>
+	<select id="selectShopCategoryName" parameterClass="Long"
+		resultClass="String">
+		select name from tb_company_shop_category where
+		company_shop_category_id=#value#
+	</select>
+	<select id="selectShopAreaList" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select area_name as areaName,area_id as areaId from
+		tb_area t where t.delete_flag!=2 and
+		exists(select s.area_id from
+		tb_company_shop_area s
+		where
+		s.company_shop_id=#value#
+		and
+		s.area_id=t.area_id and s.delete_flag!=2)
+	</select>
+
+
+	<select id="selectRestarauntProductCategory" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select product_shop_category_id as proShopCategoryId,name
+		from
+		tb_product_shop_category ff
+		where ff.shop_id=#companyShopId# and
+		ff.delete_flag!=2
+		<isEqual prepend="AND" property="companyId" compareValue="283">
+			(parent_id=0 or parent_id is null)
+		</isEqual>
+		order by 1-order_field desc
+	</select>
+
+	<select id="selectProductByShopSelfCategory" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select t2.product_id as productId, t2.name,t2.star_score
+		as
+		starScore,t2.content,
+		t1.company_shop_product_id as
+		companyShopProductId
+		from
+		(select t.company_shop_product_id,t.product_id
+		from tb_company_shop_product t where
+		t.delete_flag!=2 and
+		company_shop_id=#companyShopId#
+		and exists(select kk.product_id from
+		tb_product kk where
+		kk.delete_flag!=2 and kk.product_id=t.product_id)
+		and exists(select g.company_shop_product_id from
+		tb_company_shop_product_sku g
+		where
+		g.company_shop_product_id=t.company_shop_product_id
+		and
+		g.delete_flag!=2)
+		<isNotEqual prepend="AND" property="companyId" compareValue="283">
+		  t.product_shop_category_id=#shopSelfCategoryId#
+		</isNotEqual>
+		<isEqual prepend="AND" property="companyId" compareValue="283">
+		  t.product_shop_category_id in(select  product_shop_category_id  
+		  from  tb_product_shop_category where shop_id=#companyShopId# 
+		  and parent_id=#shopSelfCategoryId# and delete_flag!=2)
+		</isEqual>
+		)
+		t1,
+		tb_product t2 where t1.product_id = t2.product_id
+	</select>
+
+	<select id="selectProductSkuInfo" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select * from tb_product_sku where product_sku_id=#value#
+	</select>
+
+	<select id="selectProductCartInfo" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select product_id,name,product_number from tb_product
+		where
+		product_id=#value#
+	</select>
+	<select id="findProductName" parameterClass="Long" resultClass="String">
+		select name from tb_product where product_id=#value#
+	</select>
+	<select id="selectProductDetail" parameterClass="Long"
+		resultMap="ProductRes">
+		select *,0 as company_shop_product_id from tb_product where
+		product_id=#value#
+	</select>
+
+	<select id="findProductImageList" parameterClass="Long"
+		resultClass="String">
+		select file_path from tb_product_image where
+		product_id=#value#
+	</select>
+
+	<select id="findCompanyShopImage" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select name, deliver_ok deliverOk,deliver_money as
+		deliverMoney, company_shop_id as companyShopId, logo,work_time as
+		workTime,service_time as serviceTime,examine_result as result
+		from
+		tb_company_shop where company_shop_id=#value#
+	</select>
+	<select id="selectSumProductSell" resultClass="String">
+		select
+		isnull(sum(isnull(oi.qty,0)),0)
+		from
+		tb_order_item as oi
+		where
+		oi.company_shop_product_id=#value# and
+		exists(select d.order_id from
+		tb_order d where d.status='5' and d.order_id =
+		oi.order_id)
+	</select>
+
+
+	<select id="findProductComment" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top $size$ product_comment_id as
+		product_comment_id,
+		product_id as productId,user_id as
+		userId,content,comment_time as commentTime
+		from (select
+		ROW_NUMBER()over(order by product_comment_id desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from tb_product_comment
+		where
+		company_shop_product_id=#companyShopProductId# and delete_flag!=2
+		order by
+		product_comment_id desc) ss) ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<select id="findSelfMadeProduct" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select
+		p.content,p.company_id,p.foreign_name,p.product_id,p.name
+		nickName,pa.name,pa.product_attribute_id from tb_product
+		p,tb_product_attribute pa
+		where pa.product_id=p.product_id and
+		pa.delete_flag=1 and
+		p.product_id =(select product_id from
+		tb_company_shop_product where
+		company_shop_product_id=#shopProductId#)
+	</select>
+	<select id="findParentAppendName" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_append where company_id=#companyId# and
+		(parent_id=0 or parent_id
+		is null) and delete_flag=1
+	</select>
+	<select id="findChildenAppendName" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_product_append pa, tb_append a where
+		pa.append_id=
+		a.append_id and pa.delete_flag=1 and a.delete_flag=1 and
+		pa.product_id=#productId# and
+		a.parent_id=#parentId#
+	</select>
+
+
+	<select id="findAttrValSku" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select pa.product_attribute_id,
+		pavs.product_sku_id,csps.company_shop_product_sku_id,
+		pav.product_attribute_value_id, pa.name attrName, pav.name
+		attrValName,ps.price,ps.old_price,csps.stock
+		from (select * from
+		tb_product_attribute where
+		product_attribute_id=#productAttributeId#
+		and delete_flag=1)
+		pa,
+		(select * from tb_company_shop_product_sku where
+		company_shop_product_id=#shopProductId# and delete_flag=1) csps,
+		(select * from
+		tb_product_attribute_value where
+		product_attribute_id=#productAttributeId# and delete_flag=1) pav,
+		tb_product_sku ps,
+		tb_product_attribute_value_sku pavs where
+		pav.product_attribute_value_id=pavs.product_attribute_value_id and
+		pavs.product_sku_id=ps.product_sku_id and
+		csps.product_sku_id=ps.product_sku_id and ps.delete_flag=1
+		and
+		pa.product_attribute_id=pav.product_attribute_id order by ps.price
+	</select>
+	<select id="findAppendNameVal" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select pa.product_id,a.* from tb_product_append
+		pa,tb_append a where
+		pa.append_id=a.append_id and
+		pa.product_id=#productId#
+	</select>
+	<select id="findAppNamValAttr" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_append where parent_id=#appendId#
+	</select>
+	<select id="findSBUXProductCategory" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_product_shop_category where
+		shop_id=#companyShopId# and
+		delete_flag!=2 order by order_field
+	</select>
+	<select id="findSBUXProductInfo" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select pa.product_attribute_id,p.create_time,
+		pa.name,p.content,p.foreign_name, p.name
+		nickName,p.product_id,csp.company_shop_product_id from tb_product p,
+		(select * from tb_company_shop_product where
+		product_shop_category_id=#productShopCategoryId# and
+		company_shop_id=#companyShopId# and delete_flag=1) csp
+		,tb_product_attribute pa
+		where
+		pa.product_id=p.product_id and
+		p.product_id=csp.product_id and pa.delete_flag=1 and p.delete_flag=1 
+		order by p.create_time
+	</select>
+	<select id="findRecommendProduct" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from (select ROW_NUMBER()over(order by num
+		desc)rowid,* from (select top ($startIndex$+$size$) * from
+		(select top
+		12 p.product_id, p.name, sp.company_shop_product_id, m.file_path,
+		COUNT(o.product_id) num
+		from tb_company_shop_product sp inner join
+		tb_product p
+		on
+		sp.product_id=p.product_id and sp.delete_flag!=2 and
+		p.delete_flag!=2
+		and sp.company_shop_id=#companyShopId# and
+		p.company_id=#companyId#
+		left join tb_product_image m on
+		m.product_id=p.product_id left join
+		tb_order_item o on
+		p.product_id=o.product_id group by
+		o.product_id,p.product_id,p.name,sp.company_shop_product_id,m.file_path
+		order by num desc)as a
+		) as aa )as aaa
+		where
+		rowid>$startIndex$
+	</select>
+
+	<insert id="addProductComment" parameterClass="java.util.HashMap">
+		insert into
+		tb_product_comment(product_id,user_id,company_shop_product_id,content,comment_time)
+		values(#productId#,#userId#,#companyShopProductId#,#content#,#commentTime#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+	<select id="selectProductComments" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from (select ROW_NUMBER()over(order by
+		comment_time desc)rowid,* from
+		(select top
+		($startIndex$+$size$+$commentId$) * from
+		(select * from
+		tb_product_comment where product_id=#productId# and
+		company_shop_product_id=#companyShopProductId# and delete_flag!=2) a
+		order by
+		a.comment_time desc ) as
+		aa ) as aaa where rowid>$startIndex$
+	</select>
+	<select id="queryCommentCreatTime" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_product_comment where user_id=#userId#
+		and
+		company_shop_product_id=#companyShopProductId# and delete_flag!=2
+		and
+		comment_time>(select convert(varchar(10),getdate(),120))
+	</select>
+	<!-- 星巴克 -->
+	<select id="findShopStatus" resultClass="java.util.HashMap">
+		select * from tb_company_shop_status
+	</select>
+</sqlMap>

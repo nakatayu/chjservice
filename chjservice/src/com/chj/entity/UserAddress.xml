@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+    <sqlMap namespace="UserAddress">
+    <typeAlias alias="UserAddress" type="com.chj.entity.UserAddress"/>
+  
+    <resultMap class="UserAddress" id="UserAddressRes">
+    <result property="addressId" column="address_id"/>
+    <result property="userId" column="user_id"/>
+    <result property="name" column="name"/>
+    <result property="postCode" column="post_code"/>
+    <result property="address" column="address"/> 
+    <result property="phone" column="phone"/> 
+    <result property="telephone" column="telephone"/>  
+	<result property="companyName" column="company_name"/> 
+	<result property="parentArea" column="parent_area"/> 
+	<result property="childArea" column="child_area"/> 
+	<result property="isSelected" column="is_selected"/> 
+	<result property="areaId" column="area_id"/> 
+    </resultMap>
+    
+ 
+   
+   <select id="selUserAddress" parameterClass="Long" resultMap="UserAddressRes">
+   		select * from tb_address where user_id = #value#
+   </select>
+    <delete id="deleteUserAddress" parameterClass="UserAddress">
+    	delete from tb_address where user_id = #userId# and address_id=#addressId#
+    </delete>
+    <select id="findUserLocation" parameterClass="Long" resultClass="java.util.HashMap">
+    	select lat,lng from tb_area where area_id in(select top 1 area_id from tb_address where user_id=#value# and area_id>0 order by is_selected desc)
+	</select>
+     <insert id="insertUserAddress" parameterClass="UserAddress">
+		INSERT  INTO tb_address(user_id,name,post_code,address,phone,telephone,parent_area,child_area,company_name
+		<isNotEmpty property="areaId">
+		 ,area_id
+		</isNotEmpty>)
+		 VALUES(#userId#, #name#,#postCode#,#address#,#phone#,'',#parentArea#,#childArea#,#companyName#
+		 <isNotEmpty property="areaId">
+		 ,#areaId#
+		</isNotEmpty>) 
+		<selectKey keyProperty="addressId" resultClass="Long" type="post">
+			select @@IDENTITY as value
+		</selectKey>
+	</insert>
+    <update id="cancelAddressSelected" parameterClass="java.util.HashMap">
+      update tb_address set is_selected=1 where is_selected=2 and user_id=#userId#
+    </update>
+    <update id="settingAddressSelected" parameterClass="java.util.HashMap">
+     update tb_address set is_selected=2 where address_id=#addressId# and user_id=#userId#
+    </update>
+    </sqlMap>

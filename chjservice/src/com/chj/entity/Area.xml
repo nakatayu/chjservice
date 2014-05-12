@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="Area">
+
+    <resultMap class="com.chj.entity.Area" id="AreaId">
+        <result property="parentId" column="parent_id"/>
+        <result property="areaId" column="area_id"/>
+        <result property="areaName" column="area_name"/>
+    </resultMap>
+
+  <select id="loadAreaListFirst" resultClass="java.util.HashMap">
+   select area_id as areaId, area_name as areaName from tb_area where parent_id=0
+  </select>
+  
+  <select id="findAreaThree" parameterClass="Long" resultClass="java.util.HashMap">
+   select area_id,area_name,detailed_address from tb_area t
+    where parent_id =#value# and  t.delete_flag!=2
+  </select>
+   
+</sqlMap>

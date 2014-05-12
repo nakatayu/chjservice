@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="User">
+
+	<typeAlias alias="User" type="com.chj.entity.User" />
+
+	<resultMap class="User" id="UserRes">
+
+		<result property="userId" column="user_id" />
+		<result property="nickName" column="nick_name" />
+		<result property="password" column="password" />
+		<result property="phone" column="phone" />
+		<result property="isVerify" column="is_verify" />
+		<result property="email" column="email" />
+		<result property="sex" column="sex" />
+		<result property="lastLoginIp" column="last_login_ip" />
+		<result property="lastLoginTime" column="Last_login_time" />
+		<result property="idCardNo" column="id_card_no" />
+		<result property="idCardType" column="id_card_type" />
+		<result property="headPicture" column="head_picture" />
+		<result property="commpanyId" column="commpany_id" />
+		<result property="lastName" column="last_name" />
+		<result property="firstName" column="first_name" />
+		<result property="constellation" column="constellation" />
+		<result property="blood" column="blood" />
+		<result property="birthDate" column="birth_date" />
+		<result property="lableType" column="lable_type" />
+		<result property="info" column="info" />
+		<result property="city" column="city" />
+		<result property="myWeburl" column="my_weburl" />
+
+		<result property="workAddress" column="work_address" />
+		<result property="realname" column="realname" />
+		<result property="companyName" column="company_name" />
+		<result property="qqNumber" column="qq_number" />
+		<result property="sinaUrl" column="sina_url" />
+		<result property="realnameOpen" column="realname_open" />
+		<result property="sexOpen" column="sex_open" />
+		<result property="birthdateOpen" column="birthdate_open" />
+		<result property="qqnumberOpen" column="qqnumber_open" />
+		<result property="sinaurlOpen" column="sinaurl_open" />
+		<result property="shandCardno" column="shand_cardno" />
+		<result property="activeValue" column="active_value" />
+		<result property="sincerityValue" column="sincerity_value" />
+        <result property="registerTime" column="register_time"/>
+	</resultMap>
+	<insert id="addUserComment" parameterClass="java.util.HashMap">
+		insert into tb_user_message(content,type,send_date,status,topic
+		<isNotEmpty prepend="," property="recieveUserId">
+			recieve_user_id
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="sendUserId">
+			send_user_id
+		</isNotEmpty>
+		)
+		values(#content#,#type#,#sendDate#,#status#,#title#
+		<isNotEmpty prepend="," property="recieveUserId">
+			#recieveUserId#
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="sendUserId">
+			#sendUserId#
+		</isNotEmpty>
+		)
+	</insert>
+	<select id="selUserMessageList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top $size$ message_id as messageId,recieve_user_id
+		as
+		recieveUserId,send_user_id as sendUserId
+		,type,content,send_date as
+		sendDate,status,topic from(select ROW_NUMBER()over(order by
+		send_date
+		desc)rowid,* from
+		(select top ($startIndex$+$size$4) * from
+		tb_user_message
+		where recieve_user_id=#userId# or recieve_user_id is
+		null
+		order by send_date desc) ss) sss
+		where sss.rowid>$startIndex$
+	</select>
+	<select id="selUserByUniqueField" parameterClass="java.util.HashMap"
+		resultMap="UserRes">
+		select * from tb_user Where $uniqueField$ =
+		#fieldValue# and delete_flag=1
+	</select>
+
+	<select id="selUserCountByUniqueField" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_user Where $uniqueField$ =
+		#fieldValue# and delete_flag=1
+	</select>
+	<select id="selUserByUserId" parameterClass="Long" resultMap="UserRes">
+		select * from tb_user Where user_id=#value# and delete_flag=1
+	</select>
+
+	<select id="selUserByAccountPassword" parameterClass="User"
+		resultMap="UserRes">
+		select * from tb_user Where (phone =#phone# or
+		email=#phone#
+		or account=#phone#) and
+		password=#password# and delete_flag=1
+	</select>
+	<select id="findUserField" parameterClass="java.util.HashMap"
+		resultClass="String">
+		select $field$ from tb_user Where user_id=#userId# and delete_flag=1
+	</select>
+
+	<!-- 查询昵称，圈子创建人 -->
+	<select id="findUserNickName" parameterClass="Long" resultClass="java.util.HashMap">
+		select nick_name as nickName,head_picture as headPicture from tb_user
+		where user_id=#value#
+	</select>
+	<!--查询我的朋友信息 -->
+	<select id="findUserfriend" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from(select ROW_NUMBER()over(order by
+		user_id)rowid,*from(select
+		top ($startIndex$+$size$) circl.* from(
+		select u.*,f.called from
+		tb_user_friend f inner join tb_user u on
+		f.friend_id=u.user_id and
+		f.user_id=#userId#)AS circl order by
+		user_id)as t )as tt where
+		rowid>$startIndex$;
+	</select>
+
+	<!--查询我的朋友人数 -->
+	<select id="findUserfriendCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from
+		tb_user_friend f inner join tb_user u
+		on
+		f.friend_id=u.user_id and
+		f.user_id=#userId#
+	</select>
+
+	<update id="updateUserInfo" parameterClass="User">
+		update tb_user set
+		first_name=#firstName#, last_name=#lastName#,sex=#sex#,
+		id_card_type =
+		#idCardType#,id_card_no=#idCardNo#,blood=#blood#,
+		birth_date =
+		#birthDate#, constellation=#constellation#,info=#info#
+		where
+		user_id=#userId#
+	</update>
+
+	<update id="updateUserBasicInfo" parameterClass="User">
+		update tb_user
+		set nick_name=#nickName#, city=#city#,my_weburl=#myWeburl#,
+		info=#info#
+		where user_id=#userId#
+	</update>
+
+	<update id="updateUserDetailInfo" parameterClass="User">
+		update tb_user
+		set first_name=#firstName#,last_name=#lastName#,sex=#sex#,id_card_type
+		=
+		#idCardType#,id_card_no=#idCardNo#,
+		blood=#blood#,birth_date =
+		#birthDate#, constellation=#constellation#,
+		realname=#realname#,work_address=#workAddress#,company_name=#companyName#,
+		qq_number = #qqNumber#,sina_url=#sinaUrl#,
+		realname_open
+		=#realnameOpen#, sex_open =#sexOpen#,
+		birthdate_open =#birthdateOpen#,
+		qqnumber_open =#qqnumberOpen#,
+		sinaurl_open =#sinaurlOpen#
+		<isNotEmpty property="headPicture">
+		 , head_picture = #headPicture#
+		</isNotEmpty>
+		where
+		user_id=#userId#
+	</update>
+
+	<update id="updateUserHeadImg" parameterClass="User">
+		update tb_user set
+		head_picture=#headPicture#
+		where user_id=#userId#
+	</update>
+
+	<update id="updateUserPassword" parameterClass="User">
+		update tb_user
+		set password=#password#
+		where user_id=#userId#
+	</update>
+
+	<update id="updateUserLableType" parameterClass="User">
+		update tb_user
+		set lable_type=#lableType#
+		where user_id=#userId#
+	</update>
+	<!-- 杉德卡绑定 -->
+	<update id="updateShandCardno" parameterClass="User">
+		update tb_user set
+		shand_cardno=#shandCardno#
+		where user_id=#userId#
+	</update>
+
+	<insert id="insertUser" parameterClass="User">
+		INSERT INTO tb_user(phone,email,nick_name,password,is_verify,register_time,sex,head_picture)
+		VALUES(#phone#, #email#,#nickName#,#password#,#isVerify#,#registerTime#,'M','/upload/headimage/head_man.png')
+		<selectKey keyProperty="userId" resultClass="long" type="post">
+			select @@IDENTITY as value
+		</selectKey>
+	</insert>
+	<insert id="addUserFriend" parameterClass="java.util.HashMap">
+		INSERT INTO
+		tb_user_friend(user_id,friend_id,delete_flag)
+		VALUES(#userId#, #friendId#,1)
+	</insert>
+
+	<update id="updateObjectBrowseCount" parameterClass="java.util.HashMap">
+		update
+		$table$ set $countField$=$countField$+1 where
+		$pkField$=#pkFieldValue#
+	</update>
+
+	<select id="findCredentials" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top 1 * from tb_apply_info where
+		object_id=#activityId#
+		and type=#type# and do_type=#doType# and
+		user_id=#userId#
+	</select>
+	<update id="checkUserGetCode" parameterClass="String">
+		update tb_code set
+		be_used='T' where code=#code# and be_used='F' and user_id is null
+	</update>
+	<update id="updateTbCodeTable">
+		update tb_code set user_id=#userId# where code=#code#
+		and be_used='T' and user_id is null
+	</update>
+	<select id="selectkeyWordList" resultClass="String">
+	 select control_name from tb_public_opinion_control where delete_flag!=2
+	</select>
+	<update id="updateUserLoginTime" parameterClass="java.util.HashMap">
+		update tb_user set last_login_ip=#ip#,last_login_time=#time# where user_id=#userId#
+	</update>
+	<select id="findUserAreaShopArea" parameterClass="java.util.HashMap" resultClass="Long">
+	   select count(*) from tb_company_shop_area t where t.delete_flag=1 and t.company_shop_id=#companyShopId#
+	   and exists(select t1.area_id from tb_address t1 where t1.delete_flag=1 and t.area_id=t1.area_id and t1.user_id=#userId#
+	   <isNotEmpty property="areaId">
+	      and t1.area_id=#areaId#
+	   </isNotEmpty>
+	   <isEmpty property="areaId">
+	      and t1.is_selected=2 
+	   </isEmpty>
+	   )
+	</select>
+	<select id="findUserById" resultMap="UserRes" parameterClass="Long">
+	select * from tb_user where user_id=#value#
+	</select>
+	<select id="findIsFriend" parameterClass="java.util.HashMap" resultClass="Long">
+	 select count(*) from tb_user_friend where user_id=#userId# and friend_id=#friendId# and delete_flag=1
+	</select>
+	<update id="deleteUserFriend" parameterClass="java.util.HashMap">
+	  update tb_user_friend set delete_flag=2
+	  where user_id=#userId# and friend_id=#friendId# and delete_flag=1
+	</update>
+	<update id="resetUserPassword"  parameterClass="java.util.HashMap">
+	  update tb_user set password=#password#  where phone=#phonenum#
+	</update>
+</sqlMap>

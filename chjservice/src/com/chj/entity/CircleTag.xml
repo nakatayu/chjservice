@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CircleTag">
+	<typeAlias alias="CircleTag" type="com.chj.entity.CircleTag" />
+	
+	<resultMap class="CircleTag" id="CircleTagId">
+
+		<result property="circleId" column="circle_id" />
+		<result property="tagId" column="tag_id" />
+		<result property="status" column="status" />
+		<result property="addTime" column="add_time" />
+	</resultMap>
+
+</sqlMap>

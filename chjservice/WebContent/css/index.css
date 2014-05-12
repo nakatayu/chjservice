@@ -1,0 +1,93 @@
+/** é¦–é¡µ **/
+
+.fun1{
+margin:0;
+}
+.fun2{
+margin:0;
+}
+.fun1{
+float:left;margin-left:10px;
+}
+.fun1 img{
+width:110px;height:110px;cursor:pointer;
+}
+.fun2{
+float:left;margin:10px 0 0 10px;
+}
+.fun2 img{
+width:110px;height:110px;cursor:pointer;
+}
+
+.fun4{
+float:left;margin-left:10px;
+}
+.fun4 img{
+width:230px;height:230px;cursor:pointer;
+}
+
+*{margin:0;}
+a,img{border:0;}
+/* shutter */
+.shutter{position:relative;overflow:hidden;height:230px;width:350px;}
+.shutter li{position:absolute;left:0;top:0;}
+.shutter-nav{display:inline-block;margin-right:8px; margin-top:0px;color:#fff;padding:2px 5px;font-family:Î¢ÈíÑÅºÚ;font-weight:bold;font-size:12px;cursor:pointer;}
+.shutter-cur-nav{display:inline-block;margin-right:8px; margin-top:0px;color:#f00;padding:2px 5px;font-family:Î¢ÈíÑÅºÚ;font-weight:bold;font-size:12px;cursor:pointer;}
+
+
+/** é¦–é¡µ **/
+.Hr_11 A {
+	COLOR: #333;
+    TEXT-DECORATION: none;
+    font-family:Î¢ÈíÑÅºÚ;
+    font-size:14px;
+    height:100px
+}
+.Hr_11 A:hover {
+	COLOR: #005750; TEXT-DECORATION: none
+}
+
+.Hr_1{}
+
+.Hr_1 IMG {
+	BORDER-RIGHT: #a3afc5 1px solid; BORDER-TOP: #a3afc5 1px solid; FLOAT:none; BORDER-LEFT: #a3afc5 1px solid; BORDER-BOTTOM: #a3afc5 1px solid;
+}
+.Hr_11 {
+	MARGIN: 0px 0px 0px 227px;
+	WIDTH: 128px;
+	LINE-HEIGHT: 32px;
+	position:absolute
+ 
+}
+.Hr_11 .nor {
+	PADDING-RIGHT: 0px;  BACKGROUND: url(a.png) 100% -1000px; FLOAT: left; PADDING-BOTTOM: 0px; WIDTH: 124px; PADDING-TOP: 0px; TEXT-DECORATION: none
+}
+.Hr_11 .act {
+	PADDING-RIGHT: 0px;  BACKGROUND: url(a.png) 100% -1110px; FLOAT: left; PADDING-BOTTOM: 0px; WIDTH: 124px; COLOR: #fff; PADDING-TOP: 0px; TEXT-DECORATION: none
+}
+.Hfont{ padding-left:40px; line-height:100px;}
+
+
+
+/*æ–‡æœ¬æ ·å¼*/ 
+.indexProductfont{float:left;padding-left:10px; line-height:50px;width:190px;font-family:Î¢ÈíÑÅºÚ;color:#404040;font-size:18px}
+.indexbrandfont{float:left;padding-left:10px; line-height:40px;width:140px; font-family:Arial, Helvetica, sans-serif;font-size:16px}
+.brand_pic{ padding:10px 0 0 15px; font-size:16px; line-height:24px;}
+.brand_pictx{font-size:16px; line-height:24px;font-size:18px; color:#F00;}
+.brand_picx{font-size:16px; line-height:24px;font-size:14px; text-decoration:line-through;}
+.brand_xsqg{ font-size:14px; padding-left:10px; color:#999;}
+.comm_ys{ font-size:16px; font-weight:bold; font-family:Î¢ÈíÑÅºÚ;padding-left:15px;}
+.comm_ysdis{ font-size:16px;font-family:Î¢ÈíÑÅºÚ; padding-left:15px; line-height:25px;}
+.comm_pinglun{ font-size:20px; color:#FFF; margin-left:5px;}
+.comm_pinglunf{ font-size:14px; color:#FFF; margin-left:5px;}
+.page_ys{ font-size:12px;}
+.public_title{ padding-left:20px; padding-top:15px; font-size:20px; font-weight:bold;}
+.public_ds{ padding-left:20px; padding-top:15px; font-size:14px; }
+
+
+
+
+
+#weiboDay{font-weight:bold;font-size:18px;}
+#weiboTime{color:#444;font-size:14px;}
+#weiboContent{color:#222;font-size:13px;}

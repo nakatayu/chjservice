@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ActivityComment">
+
+	<typeAlias alias="ActivityComment" type="com.chj.entity.ActivityComment" />
+	<resultMap class="ActivityComment" id="ActivityCommentRes">
+		<result property="activityCommentId" column="activity_comment_id" />
+		<result property="userId" column="user_id" />
+		<result property="content" column="content" />
+		<result property="toContent" column="to_content" />
+		<result property="commentTime" column="comment_time" />
+		<result property="activityId" column="activity_id" />
+		<result property="toUserId" column="to_user_id" />
+
+		<result property="headImage" column="user_id"
+			select="TopicComment.selectHeadImage" />
+		<result property="nickName" column="user_id"
+			select="TopicComment.selectNickName" />
+		<result property="toNickName" column="to_user_id"
+			select="TopicComment.selectNickName" />
+	</resultMap>
+
+	<resultMap class="ActivityComment" id="ActPictureCommentRes">
+		<result property="activityCommentId" column="actity_photo_comment_id" />
+		<result property="userId" column="user_id" />
+		<result property="content" column="content" />
+		<result property="toContent" column="to_content" />
+		<result property="commentTime" column="comment_time" />
+		<result property="activityId" column="activity_photo_id" />
+		<result property="toUserId" column="to_user_id" />
+
+		<result property="headImage" column="user_id"
+			select="TopicComment.selectHeadImage" />
+		<result property="nickName" column="user_id"
+			select="TopicComment.selectNickName" />
+		<result property="toNickName" column="to_user_id"
+			select="TopicComment.selectNickName" />
+	</resultMap>
+
+
+	<select id="findActivityCommentByActivityId" parameterClass="java.util.HashMap"
+		resultMap="ActivityCommentRes">
+		select top $size$ * from
+		(select row_number()over(order by
+		activity_comment_id desc)rowId,*
+		from (select top ($startIndex$+$size$)
+		* from tb_activity_comment t
+		<dynamic prepend="Where">
+			<isNotEmpty prepend="AND" property="activityId">
+				t.activity_id=#activityId#
+			</isNotEmpty>
+		</dynamic>
+		order by activity_comment_id desc) ss
+		) sss
+		where sss.rowId >
+		$startIndex$
+	</select>
+
+	<select id="selectNickName" parameterClass="Long" resultClass="String">
+		select nick_name from tb_user where user_id=#value#
+	</select>
+	<select id="selectHeadImage" parameterClass="Long" resultClass="String">
+		select head_picture from tb_user where user_id=#value#
+	</select>
+
+	<insert id="addActivityComment" parameterClass="ActivityComment">
+		insert into
+		tb_activity_comment(activity_id,user_id,content,comment_time
+		<isNotEmpty prepend="," property="toContent">
+			to_content
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="toUserId">
+			to_user_id
+		</isNotEmpty>
+		)
+		values(#activityId#,#userId#,#content#,#commentTime#
+		<isNotEmpty prepend="," property="toContent">
+			#toContent#
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="toUserId">
+			#toUserId#
+		</isNotEmpty>
+		)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+	<select id="findActPictureComment" parameterClass="java.util.HashMap"
+		resultMap="ActPictureCommentRes">
+		select top $size$ * from
+		(select row_number()over(order by
+		actity_photo_comment_id desc)rowId,*
+		from (select top
+		($startIndex$+$size$) * from tb_activity_photo_comment t
+		<dynamic prepend="Where">
+			<isNotEmpty prepend="AND">
+				t.activity_photo_id=#actPhotoId#
+			</isNotEmpty>
+		</dynamic>
+		order by actity_photo_comment_id desc) ss
+		) sss
+		where sss.rowId >
+		$startIndex$
+	</select>
+	<select id="ActivityPictComment" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select * from tb_activity_photo_comment where
+		actity_photo_comment_id=#value#
+	</select>
+
+	<insert id="addPictOfActComment" parameterClass="ActivityComment">
+		insert into	tb_activity_photo_comment
+		(activity_photo_id,user_id,content,comment_time
+		<isNotEmpty prepend="," property="toContent">
+			to_content
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="toUserId">
+			to_user_id
+		</isNotEmpty>
+		)
+		values(#activityId#,#userId#,#content#,#commentTime#
+		<isNotEmpty prepend="," property="toContent">
+			#toContent#
+		</isNotEmpty>
+		<isNotEmpty prepend="," property="toUserId">
+			#toUserId#
+		</isNotEmpty>
+		)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+</sqlMap>

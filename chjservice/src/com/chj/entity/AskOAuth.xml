@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="AskOAuth">
+	<typeAlias alias="AskOAuth" type="com.chj.entity.AskOAuth" />
+	<resultMap class="AskOAuth" id="AskOAuth">
+		<result property="redirectUrl" column="redirect_url" />
+		<result property="scope" column="scope" />
+		<result property="state" column="state" />
+		<result property="code" column="code" />
+		<result property="codeIsUsed" column="code_isUsed" />
+		<result property="OAuthDate" column="OAuth_date" />
+		<result property="accessToken" column="access_token" />
+		<result property="clientSecret" column="client_secret" />
+		<result property="nickName" column="nick_name" />
+		<result property="OAuthId" column="OAuth_id" />
+		<result property="userId" column="user_id" />
+	</resultMap>
+	<select id="queryNickName" parameterClass="String" resultMap="AskOAuth">
+		SELECT * FROM tb_askOAuth WHERE nick_name=#nickName#;
+	</select>
+	<select id="selectOAuth" parameterClass="java.util.HashMap"
+		resultMap="AskOAuth">
+		SELECT * FROM tb_askOAuth WHERE access_token=#access_token#
+		AND
+		OAuth_date>#date#;
+	</select>
+	<select id="selectToken" parameterClass="java.util.HashMap"
+		resultMap="AskOAuth">
+		SELECT * FROM tb_askOAuth WHERE code=#code# AND
+		client_secret=#clientSecret# AND OAuth_date>#OAuthDate#;
+	</select>
+	<insert id="IntertOAuth" parameterClass="AskOAuth">
+		INSERT INTO
+		tb_askOAuth(redirect_url,scope,state,code,code_isUsed,OAuth_date,access_token,client_secret,nick_name,user_id)
+		VALUES(#redirectUrl#,#scope#,#state#,#code#,#codeIsUsed#,#OAuthDate#,#accessToken#,#clientSecret#,#nickName#,#userId#);
+		<selectKey keyProperty="OAuthId" resultClass="long">
+		<![CDATA[SELECT @@IDENTITY AS ID ]]>
+		</selectKey>
+	</insert>
+	<update id="updCodeUsed" parameterClass="java.util.HashMap">
+		UPDATE tb_askOAuth SET code_isUsed=#codeIsUsed# WHERE code=#code# AND
+		client_secret=#clientSecret#
+	</update>
+
+</sqlMap>

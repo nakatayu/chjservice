@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CompanyTag">
+    <typeAlias alias="CompanyTag" type="com.chj.entity.CompanyTag" />
+
+    <resultMap class="CompanyTag" id="CompanyTagId">
+        <result property="companyTagId" column="company_tag_id" />
+        <result property="companyId" column="company_id" />
+        <result property="tagId" column="tag_id" />
+        <result property="status" column="status" />
+        <result property="addTime" column="add_time" />
+    </resultMap>
+
+</sqlMap>

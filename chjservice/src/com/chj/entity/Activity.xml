@@ -1,0 +1,841 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Activity">
+
+	<typeAlias alias="Activity" type="com.chj.entity.Activity" />
+	<resultMap class="Activity" id="ActivityRes">
+		<result property="activityId" column="activity_id" />
+		<result property="title" column="activity_title" />
+		<result property="summary" column="summary" />
+		<result property="content" column="activity_content" />
+		<result property="address" column="address" />
+		<result property="createUserId" column="create_user_id" />
+		<result property="createTime" column="create_time" />
+		<result property="status" column="status" />
+		<result property="circleId" column="circle_id" />
+		<result property="joinType" column="join_type" />
+		<result property="isCheck" column="is_check" />
+		<result property="isMoney" column="is_money" />
+		<result property="activityImage" column="activity_image" />
+		<result property="lastEditTime" column="last_edit_time" />
+		<result property="updateUserId" column="update_user_id" />
+		<result property="beginTime" column="begin_time" />
+		<result property="endTime" column="end_time" />
+		<result property="enrollBeginTime" column="enroll_begin_time" />
+		<result property="enrollEndTime" column="enroll_end_time" />
+		<result property="isQrcode" column="is_qrcode" />
+		<result property="adminMessage" column="admin_message" />
+		<result property="userMax" column="user_max" />
+		<result property="browseCount" column="browse_count" />
+		<result property="isExtend" column="is_extend" />
+		<result property="moneyDetail" column="money_detail" />
+		<result property="traffic" column="traffic" />
+		<result property="payType" column="pay_type" />
+		<result property="lat" column="lat" />
+		<result property="lng" column="lng" />
+		<result property="moneynum" column="moneynum" />
+		<result property="companyId" column="company_id" />
+		<result property="examineResult" column="examine_result" />
+
+
+		<result property="commentCount" column="activity_id"
+			select="Activity.selectActivityCommentCount" />
+		<result property="userCount" column="activity_id"
+			select="Activity.selectActivityUserCount" />
+		<result property="tagList" column="activity_id"
+			select="Activity.selectActivityTagList" />
+		<result property="activities" column="activity_id"
+			select="Activity.findHeadPageActivity" />
+	</resultMap>
+
+	<typeAlias alias="ActivityPart" type="com.chj.entity.ActivityPart" />
+	<resultMap class="ActivityPart" id="ActivityPartRes">
+		<result property="activityId" column="activity_id" />
+		<result property="title" column="activity_title" />
+		<result property="summary" column="summary" />
+		<result property="address" column="address" />
+		<result property="createUserId" column="create_user_id" />
+		<result property="createTime" column="create_time" />
+		<result property="status" column="status" />
+		<result property="circleId" column="circle_id" />
+		<result property="joinType" column="join_type" />
+		<result property="isCheck" column="is_check" />
+		<result property="activityImage" column="activity_image" />
+		<result property="lastEditTime" column="last_edit_time" />
+		<result property="updateUserId" column="update_user_id" />
+		<result property="beginTime" column="begin_time" />
+		<result property="endTime" column="end_time" />
+		<result property="enrollBeginTime" column="enroll_begin_time" />
+		<result property="enrollEndTime" column="enroll_end_time" />
+		<result property="isQrcode" column="is_qrcode" />
+		<result property="adminMessage" column="admin_message" />
+		<result property="userMax" column="user_max" />
+		<result property="browseCount" column="browse_count" />
+		<result property="moneyDetail" column="money_detail" />
+		<result property="traffic" column="traffic" />
+		<result property="payType" column="pay_type" />
+		<result property="lat" column="lat" />
+		<result property="lng" column="lng" />
+		<result property="moneynum" column="moneynum" />
+		<result property="isMoney" column="is_money" />
+		<result property="companyId" column="company_id" />
+		<result property="examineResult" column="examine_result" />
+
+		<result property="userCount" column="activity_id"
+			select="Activity.selectActivityUserCount" />
+		<result property="commentCount" column="activity_id"
+			select="Activity.selectActivityCommentCount" />
+		<result property="tagList" column="activity_id"
+			select="Activity.selectActivityTagList" />
+	</resultMap>
+
+	<typeAlias alias="ActivityImage" type="com.chj.entity.ActivityImage" />
+	<resultMap class="ActivityImage" id="ActivityImageRes">
+		<result property="activityId" column="activity_id" />
+		<result property="image" column="activity_id"
+			select="Activity.selectActivityTop1Image" />
+	</resultMap>
+
+	<typeAlias alias="ActivityPhoto" type="com.chj.entity.ActivityPhoto" />
+	<resultMap class="ActivityPhoto" id="ActivityPhotoRes">
+		<result property="activityPhotoId" column="activity_photo_id" />
+		<result property="activityId" column="activity_id" />
+		<result property="filePath" column="file_path" />
+		<result property="uploadUserId" column="upload_user_id" />
+		<result property="uploadTime" column="upload_time" />
+		<result property="fileName" column="file_name" />
+		<result property="deleteFlag" column="delete_flag" />
+
+		<result property="nickName" column="upload_user_id" select="Activity.findUserNickName" />
+	</resultMap>
+
+	<typeAlias alias="ActivityUserPart" type="com.chj.entity.ActivityUserPart" />
+	<resultMap class="ActivityUserPart" id="ActivityUserPartRes">
+		<result property="activityId" column="activity_id" />
+		<result property="title" column="activity_title" />
+		<result property="summary" column="summary" />
+		<result property="address" column="address" />
+		<result property="createUserId" column="create_user_id" />
+		<result property="createTime" column="create_time" />
+		<result property="status" column="status" />
+		<result property="circleId" column="circle_id" />
+		<result property="joinType" column="join_type" />
+		<result property="isCheck" column="is_check" />
+		<result property="activityImage" column="activity_image" />
+		<result property="lastEditTime" column="last_edit_time" />
+		<result property="updateUserId" column="update_user_id" />
+		<result property="beginTime" column="begin_time" />
+		<result property="endTime" column="end_time" />
+		<result property="isQrcode" column="is_qrcode" />
+		<result property="adminMessage" column="admin_message" />
+		<result property="userMax" column="user_max" />
+		<result property="browseCount" column="browse_count" />
+
+		<result property="userCount" column="activity_id"
+			select="Activity.selectActivityUserCount" />
+		<result property="commentCount" column="activity_id"
+			select="Activity.selectActivityCommentCount" />
+		<result property="tagList" column="activity_id"
+			select="Activity.selectActivityTagList" />
+	</resultMap>
+
+	<typeAlias alias="UserCollection" type="com.chj.entity.UserCollection" />
+	<resultMap class="UserCollection" id="UserCollectionRes">
+		<result property="userId" column="user_id" />
+		<result property="objectId" column="object_id" />
+		<result property="type" column="type" />
+		<result property="createTime" column="create_time" />
+
+	</resultMap>
+
+	<sql id="dataFilter">
+		AND ((examine_result=1 and status !='3')
+		or(examine_result!='1' and
+		(status ='3' Or status ='2'))) and
+		delete_flag!=2
+		and (company_id not in(select company_id from tb_company where delete_flag=2 or (status=3 and examine_result=1))
+		or company_id is null)
+	</sql>
+
+	<select id="findIsActivityUser" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity_user
+		where
+		activity_id=#activityId# and user_id=#userId#
+	</select>
+	<select id="findActivityQrcodePath" parameterClass="java.util.HashMap"
+		resultClass="String">
+		select top 1 qrcode_path from tb_activity_user where
+		activity_id=#activityId# and user_id=#userId#
+	</select>
+	<select id="findActivityUserAlbumCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity_album
+		where
+		activity_id=#activityId# and upload_user_id=#userId#
+	</select>
+
+	<!-- 添加相册图片 -->
+	<insert id="insertUserAlbumPhoto" parameterClass="java.util.HashMap">
+		insert into
+		tb_album_photo(activity_album_id,upload_user_id,upload_time,file_name,file_path)
+		values(#activityAlbumId#,#uploadUserId#,#uploadTime#,#fileName#,#filePath#)
+	</insert>
+	<!-- 添加活动相册 -->
+	<insert id="insertActivityUserAlbum" parameterClass="java.util.HashMap">
+		insert into
+		tb_activity_album(activity_id,upload_user_id,upload_time,file_name,file_path)
+		values(#activityId#,#userId#,#createTime#,#fileName#,#filePath#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+	<sql id="orderCondition">
+		<isEqual prepend="" property="orderType" compareValue="time">
+			order by
+			activity_id $order$
+		</isEqual>
+		<isEqual prepend="" property="orderType" compareValue="browse">
+			order by
+			browse_count $order$
+		</isEqual>
+		<isEqual prepend="" property="orderType" compareValue="userCount">
+			order by
+			user_max $order$
+		</isEqual>
+	</sql>
+
+	<select id="findActivityByKeyword" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top $size$ begin_time as beginTime,lat,lng, activity_id as
+		activityId,activity_title as title,create_time as
+		createTime,browse_count as browseCount,status,examine_result as
+		examineResult,
+		create_user_id as createUserId from(select
+		ROW_NUMBER()over(
+		<include refid="Activity.orderCondition" />
+		)rowid,* from
+		(select
+		top ($startIndex$+$size$ )
+		begin_time,lat,lng,activity_id,activity_title,create_time,browse_count,
+		status,examine_result,create_user_id from tb_activity t where 1=1
+		<include refid="Activity.dataFilter" />
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(activity_title like	'%'+#keyword#+'%' or activity_content like '%'+#keyword#+'%' )
+			</isNotEmpty>
+		</dynamic>
+		<include refid="Activity.orderCondition" />
+		) ss) ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<!-- 好友主页的新建活动 -->
+	<select id="selectUserFriendHomeActivityList" parameterClass="java.util.HashMap"
+		resultMap="ActivityPartRes">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		activity_id
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$ ) * from
+		tb_activity
+		t where
+		t.status !='1' and t.status!='6' and
+		t.create_user_id =#userId#
+		order by activity_id desc) ss) ssss
+		where
+		ssss.rowid>$startIndex$
+	</select>
+
+	<!-- 好友的新建活动 -->
+	<select id="selectUserFriendActivityList" parameterClass="java.util.HashMap"
+		resultMap="ActivityPartRes">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		activity_id
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$ ) * from
+		tb_activity
+		t where
+		t.status !='1' and t.status!='6' and
+		t.create_user_id !=#userId# and
+		exists(
+		select t1.* from tb_user_friend
+		t1 where user_id=#userId# and
+		t.create_user_id=t1.friend_id)
+		order by
+		activity_id desc) ss) ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<!-- 用户收藏的活动 -->
+	<select id="selectUserCollectionActivity" parameterClass="java.util.HashMap"
+		resultMap="UserCollectionRes">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		create_time
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from
+		tb_user_collection t
+		where user_id=#userId# and type=3 and
+		do_type=#dotype#
+		and exists(select t1.activity_id from tb_activity t1
+		where t.object_id=t1.activity_id)
+		order by create_time desc) ss) ssss
+		where ssss.rowid>$startIndex$
+	</select>
+	<select id="findActivityPartById" parameterClass="Long"
+		resultMap="ActivityPartRes">
+		select * from tb_activity where activity_id=#value#
+	</select>
+	<update id="userSignInActivity" parameterClass="java.util.HashMap">
+		update
+		tb_activity_user set is_sign_in='T',sign_in_time=GETDATE() where
+		activity_id=#activityId# and user_id=#userId#
+	</update>
+	<select id="findActivityUserQrcode" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select qrcode_path qrcodePath,status from tb_activity_user
+		where
+		activity_id=#activityId# and
+		user_id=#userId#
+	</select>
+	<select id="findActivityUserIsSignIn" parameterClass="java.util.HashMap"
+		resultClass="String">
+		select top 1 is_sign_in from tb_activity_user where
+		activity_id=#activityId#
+		and user_id=#userId#
+	</select>
+
+	<select id="findUserActivityList" parameterClass="java.util.HashMap"
+		resultMap="ActivityUserPartRes">
+		select top $size$ * from (select row_number()over(
+		<include refid="Activity.orderCondition" />
+		)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_activity as
+		t1
+		where 1=1
+		<include refid="Activity.dataFilter" />
+		<isEqual prepend="AND" property="userActivity" compareValue="1">
+			create_user_id = #userId#
+		</isEqual>
+		<isEqual prepend="AND" property="userActivity" compareValue="0">
+			exists(select s.activity_id from tb_activity_user s where
+			s.activity_id=t1.activity_id and s.user_id=#userId# and s.status not
+			in(4,5))
+		</isEqual>
+		<isNotEmpty property="timeSpace">
+			<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  begin_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  begin_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+			</isEqual>
+
+			<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  begin_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  begin_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+			</isEqual>
+
+			<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  begin_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  begin_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+			</isEqual>
+		</isNotEmpty>
+
+		<isNotEmpty property="tagIds" prepend="AND">
+			exists(select r.tag_id from tb_activity_tag r where r.delete_flag!=2 and
+			r.activity_id=t1.activity_id AND r.tag_id in($tagIds$))
+		</isNotEmpty>
+
+		<include refid="Activity.orderCondition" />
+		) rr) ss
+		where ss.rowId > $startIndex$
+	</select>
+
+	<select id="findUserActivityListCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity as
+		t1
+		where 1=1
+		<include refid="Activity.dataFilter" />
+		<isEqual prepend="AND" property="userActivity" compareValue="1">
+			create_user_id = #userId#
+		</isEqual>
+		<isEqual prepend="AND" property="userActivity" compareValue="0">
+			exists(select s.activity_id from tb_activity_user s where
+			s.activity_id=t1.activity_id and s.user_id=#userId# and s.status not
+			in(4,5))
+		</isEqual>
+		<isNotEmpty property="timeSpace">
+			<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  begin_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  begin_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+			</isEqual>
+
+			<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  begin_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  begin_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+			</isEqual>
+
+			<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  begin_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  begin_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+			</isEqual>
+		</isNotEmpty>
+
+		<isNotEmpty property="tagIds" prepend="AND">
+			exists(select r.tag_id from tb_activity_tag r where r.delete_flag!=2 and
+			r.activity_id=t1.activity_id AND r.tag_id in($tagIds$))
+		</isNotEmpty>
+	</select>
+
+
+	<select id="findActivityRecommend" parameterClass="java.util.HashMap"
+		resultMap="ActivityPartRes">
+		select top $maxNum$ * from tb_activity t where  1=1
+		<include refid="Activity.dataFilter" />
+		<isNotEmpty prepend="AND" property="activityId">
+			activity_id!=#activityId#
+		</isNotEmpty>
+		<isNotEmpty property="ids">
+         and activity_id not in($ids$)
+      </isNotEmpty> 
+		<isEqual property="userId" compareValue="-1">
+         order by activity_id desc
+      </isEqual>
+		<isEqual property="userId" compareValue="0">
+		   and is_extend > 0 order by is_extend asc
+		</isEqual>
+		 <isGreaterThan property="userId" compareValue="0">
+		     and exists(select * from tb_activity_tag t1 where t1.delete_flag=1 
+		     and  t1.activity_id=t.activity_id and 
+		     exists(select t2.tag_id from tb_user_tag t2 where t2.delete_flag=1 and t2.tag_id=t1.tag_id and t2.user_id=#userId#))
+		       order by activity_id desc
+		 </isGreaterThan>
+		
+	</select>
+
+	<select id="findActivityUserList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select t.user_id as userId,t.nick_name as
+		nickName,t.head_picture as
+		headPicture
+		from tb_user t where user_id
+		in(select top $size$ user_id from (select
+		row_number()over(order by
+		create_time desc)rowId,*
+		from (select top ($startIndex$+$size$) * from
+		tb_activity_user s where s.activity_id=#activityId# and delete_flag!=2 and status !='4' and status !='5'
+		order by
+		s.create_time desc) ss
+		) sss
+		where sss.rowId > $startIndex$)
+	</select>
+
+	<select id="selectActivityTagList" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select tag_id as tagId,tag_name as tagName from tb_tag s
+		where s.tag_id in(select t.tag_id from tb_activity_tag t
+		where
+		t.activity_id=#value#)
+	</select>
+
+	<select id="selectActivityTop1Image" parameterClass="Long"
+		resultClass="String">
+		select top 1 file_path from tb_activity_photo where
+		activity_id=#value#
+	</select>
+	<select id="selectCircleActivityImage" parameterClass="Long"
+		resultMap="ActivityImageRes">
+		select top 6 * from tb_activity where circle_id=#value#
+		<include refid="Activity.dataFilter" />
+	</select>
+	<select id="selectActivityUserCount" parameterClass="Long"
+		resultClass="Long">
+		select count(*) from tb_activity_user where
+		activity_id=#activityId# and delete_flag=1 and status='3'
+	</select>
+	<select id="selectActivityCommentCount" parameterClass="Long"
+		resultClass="Long">
+		select count(*) from tb_activity_comment where
+		activity_id=#value#
+	</select>
+
+	<select id="selectHotActivityList" parameterClass="java.util.HashMap"
+		resultMap="ActivityPartRes">
+		select top $size$ * from (select row_number()over(
+		<include refid="Activity.orderCondition" />
+		)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_activity as
+		t1
+		where 1=1
+		<isNotEmpty prepend="AND" property="activityId">
+			activity_id!=#activityId#
+		</isNotEmpty>
+		<include refid="Activity.dataFilter" />
+
+		<isNotEmpty property="timeSpace">
+			<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  begin_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  begin_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+			</isEqual>
+
+			<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  begin_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  begin_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+			</isEqual>
+
+			<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  begin_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  begin_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+			</isEqual>
+		</isNotEmpty>
+
+		<isNotEmpty property="tagIds" prepend="AND">
+			exists(select r.tag_id from tb_activity_tag r where r.delete_flag!=2 and
+			r.activity_id=t1.activity_id AND r.tag_id in($tagIds$))
+		</isNotEmpty>
+
+		<include refid="Activity.orderCondition" />
+		) rr) ss
+		where ss.rowId > $startIndex$
+	</select>
+
+	<select id="selectHotActivityListCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity as t1
+		where 1=1
+		<include refid="Activity.dataFilter" />
+		<isNotEmpty property="timeSpace">
+			<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  begin_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  begin_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+			</isEqual>
+
+			<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  begin_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  begin_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+			</isEqual>
+
+			<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  begin_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  begin_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+			</isEqual>
+		</isNotEmpty>
+
+		<isNotEmpty property="tagIds" prepend="AND">
+			exists(select r.tag_id from tb_activity_tag r where r.delete_flag!=2 and
+			r.activity_id=t1.activity_id AND r.tag_id in($tagIds$))
+		</isNotEmpty>
+	</select>
+
+	<select id="findHasQrcodeCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity_user where
+		activity_id=#activityId# and
+		user_id=#userId#
+		and (qrcode_path is not
+		null and qrcode_path!='')
+	</select>
+	<select id="findHasAddActivityUser" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity_user where
+		activity_id=#activityId# and
+		user_id=#userId# and delete_flag=1 and status in(1,2,3)
+	</select>
+	<update id="updateActivityUserQrcodePath" parameterClass="java.util.HashMap">
+		update
+		tb_activity_user set qrcode_path=#qrcodePath# where user_id=#userId#
+		and activity_id=#activityId#
+		and (qrcode_path is null or
+		qrcode_path='')
+	</update>
+
+	<select id="findActivityImageList" parameterClass="java.util.HashMap"
+		resultMap="ActivityPhotoRes">
+		select top $size$ * from (select row_number()over(order by
+		activity_photo_id
+		desc)rowId,*
+		from (select top ($startIndex$+$size$) *
+		from tb_activity_photo t
+		where activity_id=#activityId#
+		order by
+		activity_photo_id desc) ss
+		) sss
+		where sss.rowId > $startIndex$
+	</select>
+
+	<select id="findUserNickName" parameterClass="Long" resultClass="String">
+		select nick_name from tb_user where user_id=#value#
+	</select>
+
+	<select id="findActivityById" parameterClass="Long" resultMap="ActivityRes">
+		select * from tb_activity where activity_id=#value#
+	</select>
+	<insert id="insertActivityUser" parameterClass="java.util.HashMap">
+		insert into
+		tb_activity_user(activity_id,user_id,status,create_time,is_sign_in,is_sign_out
+		<isNotEmpty prepend="" property="qrcodePath">
+			,qrcode_path
+		</isNotEmpty>
+		)
+		values(#activityId#,#userId#,#status#,#createTime#, 'F','F'
+		<isNotEmpty prepend="" property="qrcodePath">
+			,#qrcodePath#
+		</isNotEmpty>
+		)
+	</insert>
+	<insert id="insertActivity" parameterClass="Activity">
+		insert into
+		tb_activity(activity_title,summary,activity_content,address,create_user_id,create_time,
+		status,join_type,is_check,activity_image,begin_time,is_qrcode,user_max,browse_count,examine_result,
+		is_money,moneynum,pay_type,money_detail,traffic,enroll_begin_time
+		<isNotEmpty property="lat">
+			,lat
+		</isNotEmpty>
+		<isNotEmpty property="lng">
+			,lng
+		</isNotEmpty>
+		<isNotEmpty property="enrollEndTime">
+			,enroll_end_time
+		</isNotEmpty>
+		<isNotEmpty property="endTime">
+			,end_time
+		</isNotEmpty>
+		<isNotEmpty property="circleId">
+			,circle_id
+		</isNotEmpty>
+		)
+		values(#title#,#summary#,#content#,#address#,#createUserId#,#createTime#,#status#,#joinType#,#isCheck#,
+		#activityImage#,#beginTime#,#isQrcode#,#userMax#,0,#examineResult#,
+		#isMoney#,#moneynum#,#payType#,#moneyDetail#,#traffic#,#enrollBeginTime#
+		<isNotEmpty property="lat">
+			,#lat#
+		</isNotEmpty>
+		<isNotEmpty property="lng">
+			,#lng#
+		</isNotEmpty>
+		<isNotEmpty property="enrollEndTime">
+			,#enrollEndTime#
+		</isNotEmpty>
+		<isNotEmpty property="endTime">
+			,#endTime#
+		</isNotEmpty>
+		<isNotEmpty property="circleId">
+			,#circleId#
+		</isNotEmpty>
+		)
+		<selectKey keyProperty="activityId" resultClass="Long" type="post">
+			select @@IDENTITY as value
+		</selectKey>
+	</insert>
+
+	<insert id="insertActivityTag" parameterClass="java.util.HashMap">
+		insert
+		tb_activity_tag(tag_id,activity_id,create_time)
+		values(#tagId#,#activityId#,#createTime#)
+	</insert>
+
+	<select id="findHeadPageActivity" resultClass="java.util.HashMap">
+		select top 3
+		activity_id,convert(date,begin_time) as
+		create_time,activity_image,is_extend,status,examine_result,create_user_id
+		from tb_activity where
+		is_extend>0 order by is_extend desc
+	</select>
+
+	<select id="findActivityEnrollTime" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select enroll_begin_time,enroll_end_time from tb_activity
+		where activity_id=#value#
+	</select>
+	<update id="applyCloseActivity" parameterClass="java.util.HashMap">
+		update
+		tb_activity set status='3',examine_result=3 where
+		activity_id=#activityId# and create_user_id=#userId#
+	</update>
+	<update id="updateActivityUserStatus" parameterClass="java.util.HashMap">
+		update
+		tb_activity_user set status=#status# where activity_id=#activityId#
+		and user_id=#userId#
+	</update>
+	<select id="findActivityUserStatus" parameterClass="java.util.HashMap"
+		resultClass="String">
+		select status from tb_activity_user where
+		activity_id=#activityId# and
+		user_id=#userId#
+	</select>
+
+	<select id="statusOfMemberMeth" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from (select row_number()over(order by
+		create_time desc)rowId,* from (select top ($startIndex$+$size$) * from
+		(select * from tb_activity_user where activity_id=#activityId# and
+		status=#status#) t
+		order by create_time desc) ss ) sss where sss.rowId
+		>$startIndex$
+	</select>
+	<select id="examineTheMemberMethCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity_user where
+		activity_id=#activityId# and
+		status=#status#
+	</select>
+	<select id="signInTheMemberMeth" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from (select row_number()over(order by
+		create_time desc)rowId,* from (select top ($startIndex$+$size$) * from
+		(select * from tb_activity_user where activity_id=#activityId# and
+		status=3 and $columnName$=#signIn#) t
+		order by create_time desc) ss )
+		sss where sss.rowId
+		>$startIndex$
+	</select>
+	<select id="signInTheMemberMethCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity_user where
+		activity_id=#activityId# and
+		$columnName$=#signIn# and status=3
+	</select>
+	<update id="updateActivityPeople" parameterClass="java.util.HashMap">
+		update
+		tb_activity_user set $filed$=#status# where user_id=#userId# and
+		activity_id=#activityId#
+	</update>
+	<select id="selectActivityUser" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select user_id from tb_activity_user where
+		activity_id=#activityId# and status=3
+	</select>
+	<select id="findActivityImageCount" parameterClass="String"
+		resultClass="Long">
+		select COUNT(*) from tb_activity_photo where
+		activity_id=#activityId#
+	</select>
+	<delete id="deleteActivityImage" parameterClass="java.util.HashMap">
+		delete from tb_activity_photo where
+		activity_photo_id=#activityPhotoId#
+		<isEmpty prepend="and">
+			upload_user_id=#userId#
+		</isEmpty>
+	</delete>
+	<select id="findActCreUserById" parameterClass="String"
+		resultClass="Long">
+		select create_user_id cUserId from tb_activity where
+		activity_id=#value#
+	</select>
+	<select id="findActivityUserId" parameterClass="Long"
+		resultClass="Long">
+		select create_user_id from tb_activity where
+		activity_id=#value#
+	</select>
+	<insert id="uploadActivityImage" parameterClass="java.util.HashMap">
+		insert into
+		tb_activity_photo(activity_id,upload_user_id,file_path,file_name,delete_flag,upload_time)
+		values(#activityId#,#uploadUserId#,#filePath#,#fileName#,#deleteFlag#,#createTime#)
+	</insert>
+	<insert id="insertApplyInfo" parameterClass="java.util.HashMap">
+		insert into
+		tb_apply_info(user_id,object_id,type,do_type,file_path,reason,create_time)
+		values(#userId#,#objectId#,#type#,#doType#,#filePath#,#reason#,#createTime#)
+	</insert>
+	<delete id="deleteActivityTags" parameterClass="Long">
+		delete from tb_activity_tag where activity_id=#activityId#
+	</delete>
+	<update id="updateActivity" parameterClass="Activity">
+		update tb_activity set
+		status='2',examine_result=3,activity_title=#title#,summary=#summary#,
+		is_money=#isMoney#,activity_image=#activityImage#,activity_content=#content#,begin_time=#beginTime#,
+		enroll_begin_time=#enrollBeginTime#,address=#address#,traffic=#traffic#,join_type=#joinType#,
+		user_max=#userMax#,is_qrcode=#isQrcode#,
+		is_check=#isCheck#
+		<isNotEmpty property="lat">
+			,lat=#lat#
+		</isNotEmpty>
+		<isNotEmpty property="lng">
+			,lng=#lng#
+		</isNotEmpty>
+		<isNotEmpty property="enrollEndTime">
+			,enroll_end_time=#enrollEndTime#
+		</isNotEmpty>
+		<isNotEmpty property="endTime">
+			,end_time=#endTime#
+		</isNotEmpty>
+		<isEqual property="isMoney" compareValue="T">
+			,pay_type=#payType#,moneynum=#moneynum#,money_detail=#moneyDetail#
+		</isEqual>
+		where activity_id=#activityId#
+	</update>
+	<select id="findActivityMapList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select lat,lng, activity_id as activityId,create_user_id as
+		createUserId,status,examine_result as examineResult,
+		activity_title as title,address, begin_time as beginTime,end_time as endTime from
+		(select row_number()over(order by begin_time desc)rowId,*
+		from (select
+		top ($startIndex$+$size$) * from tb_activity t
+		where lat >0 and lng > 0
+		<include refid="Activity.dataFilter" />
+		<dynamic prepend="">
+
+			<isNotEmpty prepend="AND" property="latmin">
+			  	 	<![CDATA[ lat >= #latmin# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="latmax">
+			  	 	<![CDATA[ lat <= #latmax# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="lngmin">
+			  	 	<![CDATA[ lng >= #lngmin# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="lngmax">
+			  	 	<![CDATA[ lng <= #lngmax# ]]>
+			</isNotEmpty>
+
+		</dynamic>
+		order by begin_time desc) ss
+		) sss
+		where
+		sss.rowId > $startIndex$
+	</select>
+	<select id="findActivityMapListCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity t
+		where lat >0 and lng > 0
+		<include refid="Activity.dataFilter" />
+		<dynamic prepend="">
+
+			<isNotEmpty prepend="AND" property="latmin">
+			  	 	<![CDATA[ lat >= #latmin# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="latmax">
+			  	 	<![CDATA[ lat <= #latmax# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="lngmin">
+			  	 	<![CDATA[ lng >= #lngmin# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="lngmax">
+			  	 	<![CDATA[ lng <= #lngmax# ]]>
+			</isNotEmpty>
+
+		</dynamic>
+	</select>
+	 <select id="findActivityUserImageCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_activity_photo where activity_id=#activityId# and
+		upload_user_id=#uploadUserId# and delete_flag!=2
+	</select> 
+
+	<select id="findActivityUserRemainCount" parameterClass="Long" resultClass="Long">
+	select user_max-(select COUNT(*) from tb_activity_user where activity_id=#value# and status!='4' and status !='5') 
+	from tb_activity where activity_id=#value#
+	</select>
+	<select id="findActivityAndUserTagList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	  select tag_id as tagId,tag_name as tagName from tb_tag t where t.delete_flag=1 
+	  <isNotEmpty property="ids">
+         and t.tag_id not in($ids$)
+      </isNotEmpty> 
+      <isEqual property="userId" compareValue="0">
+         and   exists(select t1.tag_id  from tb_activity_tag t1 where  t.tag_id=t1.tag_id and t1.delete_flag=1  and  t1.activity_id=#activityId#)
+       </isEqual>
+      <isGreaterThan property="userId" compareValue="0">
+        and  exists(select t1.tag_id  from tb_activity_tag t1 where  t.tag_id=t1.tag_id and t1.delete_flag=1  and  t1.activity_id=#activityId#
+	      and exists(select t2.tag_id  from tb_user_tag t2 where t1.tag_id=t2.tag_id and t2.delete_flag=1 and t2.user_id=#userId#))
+        </isGreaterThan>
+	 
+	</select>
+</sqlMap>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Tag">
+    <typeAlias alias="Tag" type="com.chj.entity.Tag"/>
+
+    <resultMap class="Tag" id="TagRes">
+        <result property="tagId" column="tag_id"/>
+        <result property="tagName" column="tag_name"/>
+        <result property="createAccount" column="create_account"/>
+        <result property="createDate" column="create_date"/>
+        <result property="clickCount" column="click_count"/>
+        <result property="parentId" column="parent_id"/>
+    </resultMap>
+
+    <select id="selAllSecondLable" resultClass="java.util.HashMap">
+       select tag_id as tagId,tag_name as tagName from tb_tag
+       where delete_flag!=2
+       <dynamic prepend="">
+        <isNotEmpty prepend="AND" property="parentId">
+           parent_id = #parentId#
+        </isNotEmpty>
+        <isEmpty prepend="AND" property="parentId">
+        parent_id in (select tag_id from tb_tag where parent_id=0)
+        </isEmpty>
+       </dynamic>
+    </select>
+    
+     <select id="findFirstTagList" resultClass="java.util.HashMap">
+       select tag_id as tagId,tag_name as tagName from tb_tag where parent_id=0 and delete_flag!=2
+    </select>
+
+    <select id="selUserSecondLable" parameterClass="Long" resultClass="java.util.HashMap">
+       select tag_id as tagId,tag_name as tagName  from tb_tag where parent_id =#value#   and delete_flag!=2
+    </select>
+
+    <select id="selThirdLable" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+       select tag_id as tagId,tag_name as tagName  from tb_tag t where parent_id =#parentId#  and delete_flag!=2
+       <isNotEmpty prepend="AND" property="userId">
+           not exists(select t1.tag_id from tb_user_tag t1 where t1.tag_id=t.tag_id and t1.user_id=#userId# and t1.delete_flag!=2)
+       </isNotEmpty>
+        
+    </select>
+    <select id="selCircleLable" parameterClass="Long" resultClass="java.util.HashMap">
+     select tag_name from tb_tag where  delete_flag!=2 and tag_id in(select tag_id from tb_circle_tag where circle_id in(select circle_id from tb_circle where circle_id=#str# ))
+    </select>
+    <select id="selServiceTagByServiceId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        SELECT s.tag_name, s.tag_id FROM tb_tag s where s.delete_flag=1
+        <isNotEmpty property="ids">
+         and s.tag_id not in($ids$)
+      </isNotEmpty>
+       <isEqual property="userId" compareValue="0">
+          and exists(select t.tag_id from tb_service_tag t where t.delete_flag =1 and t.tag_id=s.tag_id and t.service_id=#serviceId#)
+       </isEqual>
+       <isGreaterThan property="userId" compareValue="0">
+        and exists(select t.tag_id from tb_service_tag t where t.delete_flag =1 and t.tag_id=s.tag_id and t.service_id=#serviceId#
+        and exists(select t1.user_id from tb_user_tag t1 where  t1.delete_flag =1 and t1.user_id=#userId# and t1.tag_id=t.tag_id))
+      </isGreaterThan>
+    </select>
+    <select id="selCompanyLabel" parameterClass="Long" resultClass="java.util.HashMap">
+      SELECT tag_name as tagName,tag_id astagId  from tb_tag t where t.delete_flag=1 and 
+	  exists(select t1.tag_id  from tb_company_tag t1 where t.delete_flag=1 and t.tag_id=t1.tag_id and t1.company_id=#value#)
+    </select>
+</sqlMap>

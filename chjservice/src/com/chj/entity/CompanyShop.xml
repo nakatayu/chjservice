@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="CompanyShop">
+	<typeAlias alias="CompanyShop" type="com.chj.entity.CompanyShop" />
+
+	<resultMap class="CompanyShop" id="CompanyShopRes">
+		<result property="companyShopId" column="company_shop_id" />
+		<result property="name" column="name" />
+		<result property="address" column="address" />
+		<result property="email" column="email" />
+		<result property="companyId" column="company_id" />
+		<result property="registTime" column="regist_time" />
+		<result property="logo" column="logo" />
+		<result property="location" column="location" />
+		<result property="categoryId" column="category_id" />
+		<result property="consumptionPer" column="consumption_per" />
+		<result property="orderField" column="order_field" />
+		<result property="sendTime" column="send_time" />
+		<result property="sendPrice" column="send_price" />
+		<result property="payType" column="pay_type" />
+		<result property="areaFirstId" column="area_first_id" />
+		<result property="areaSecondId" column="area_second_id" />
+		<result property="deliverOk" column="deliver_ok" />
+		<result property="terminalOk" column="terminal_ok" />
+		<result property="linkman" column="linkman" />
+		<result property="linkmanTel" column="linkman_tel" />
+		<result property="starScore" column="star_score" />
+		<result property="content" column="content" />
+		<result property="workTime" column="work_time" />
+		<result property="serviceTime" column="service_time" />
+		<result property="deliverMoney" column="deliver_money" />
+		<result property="status" column="status" />
+		<result property="examineResult" column="examine_result" />
+		<result property="lat" column="lat" />
+		<result property="lng" column="lng" />
+	</resultMap>
+
+	<typeAlias alias="UserCollection" type="com.chj.entity.UserCollection" />
+	<resultMap class="UserCollection" id="UserCollectionRes">
+		<result property="userId" column="user_id" />
+		<result property="objectId" column="object_id" />
+		<result property="type" column="type" />
+		<result property="createTime" column="create_time" />
+
+		<result property="shopInfo" column="object_id"
+			select="CompanyShop.findCompanyShopPartById" />
+	</resultMap>
+	
+	<sql id="dataFilter">
+		and delete_flag!=2 and (((status=1 or status=4) and examine_result=1) 
+		or (status=3 and examine_result in(2,3))
+		or (status=2 and examine_result in(1,3)))
+	</sql>
+
+	
+	<select id="findCompanyShopPartById" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select company_shop_id as companyShopId, name,browse_count as
+		browseCount,consumption_per as consumptionPer,
+		logo from tb_company_shop where company_shop_id=#value#
+	</select>
+	<select id="selectUserCollectionShop" parameterClass="java.util.HashMap"
+		resultMap="UserCollectionRes">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by create_time
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from
+		tb_user_collection t0
+		where user_id=#userId# and type=1 and
+		do_type=#dotype#
+		and exists(select t1.company_shop_id from
+		tb_company_shop t1 where t0.object_id=t1.company_shop_id)
+		order by
+		create_time desc) ss) ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<select id="selTop4RestaurantList" resultClass="java.util.HashMap">
+		select top $maxNum$ company_shop_id as companyShopId,name,logo,consumption_per as
+		consumptionPer from tb_company_shop t where
+		t.company_id <include refid="Product.dataFilterComapny"/>
+		 <include refid="CompanyShop.dataFilter"/> 
+		 <isNotEmpty property="ids">
+         and company_shop_id not in($ids$)
+      </isNotEmpty> 
+	  <isEqual property="userId" compareValue="-1">
+         order by company_shop_id desc
+      </isEqual>
+		<isEqual property="userId" compareValue="0">
+		   and order_field > 0 order by order_field asc
+		</isEqual>
+		 <isGreaterThan property="userId" compareValue="0">
+		     and  exists(select t1.tag_id  from tb_company_shop_tag t1 where t1.delete_flag=1  and  t1.company_shop_id=t.company_shop_id
+	        and exists(select t2.tag_id  from tb_user_tag t2 where t1.tag_id=t2.tag_id and t2.delete_flag=1 and t2.user_id=#userId#))
+		 </isGreaterThan>
+	</select>
+
+	
+	<select id="selShopTagList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        SELECT s.tag_name as tagName, s.tag_id as tagId FROM tb_tag s where s.delete_flag=1
+        <isNotEmpty property="ids">
+         and s.tag_id not in($ids$)
+      </isNotEmpty>
+       <isEqual property="userId" compareValue="0">
+          and exists(select t.tag_id from tb_company_shop_tag t where t.delete_flag =1 and t.tag_id=s.tag_id and t.company_shop_id=#companyShopId#)
+       </isEqual>
+       <isGreaterThan property="userId" compareValue="0">
+        and exists(select t.tag_id from tb_company_shop_tag t where t.delete_flag =1 and t.tag_id=s.tag_id and t.company_shop_id=#companyShopId#
+        and exists(select t1.user_id from tb_user_tag t1 where  t1.delete_flag =1 and t1.user_id=#userId# and t1.tag_id=t.tag_id))
+      </isGreaterThan>
+    </select>
+
+	<select id="selRestarauntMoreList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select company_shop_id as companyShopId, name,logo,consumption_per as
+		consumptionPer,star_score as starScore
+		,content from
+		(select row_number()over(order by order_field desc,company_shop_id
+		desc)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_company_shop t
+		where t.company_id <include refid="Product.dataFilterComapny"/>
+		<include refid="CompanyShop.dataFilter"/>
+	<dynamic prepend="">
+	
+	  <isNotEmpty property="timeSpace">
+       <isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  regist_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  regist_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  regist_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  regist_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  regist_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  regist_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]> 
+       </isEqual> 
+      </isNotEmpty>
+      
+      <isNotEmpty property="tagIds" prepend="AND">
+         exists(select r.tag_id from tb_company_shop_tag r where r.delete_flag!=2 and  r.company_shop_id=t.company_shop_id AND r.tag_id in($tagIds$))
+      </isNotEmpty>
+      <isNotEmpty prepend="AND" property="deliverOk">
+		deliver_ok=#deliverOk#
+	</isNotEmpty>
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' )
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaThirdId">
+				exists(select
+				f.company_shop_id
+				from tb_company_shop_area f
+				where
+				f.area_id=#areaThirdId# and
+				t.company_shop_id=f.company_shop_id)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="categoryId">
+				category_id=#categoryId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="sendTime">
+				send_time=#sendTime#
+			</isNotEmpty>
+
+		
+			<isEqual  prepend="AND" property="sendPrice"  compareValue="0">
+				send_price  = #sendPrice#   and deliver_ok='T' 
+			</isEqual>
+			<isEqual  prepend="AND" property="sendPrice"  compareValue="1">
+					<![CDATA[ send_price  <20  and deliver_ok='T' ]]>				
+			</isEqual>
+				<isEqual  prepend="AND" property="sendPrice"  compareValue="2">
+				<![CDATA[(send_price  >=20 and send_price<50   and deliver_ok='T' )]]>	
+			</isEqual>
+				<isEqual  prepend="AND" property="sendPrice"  compareValue="3">
+				<![CDATA[ send_price  >=50   and deliver_ok='T' ]]>	
+			</isEqual>
+		
+		
+			<isEqual  prepend="AND" property="consumptionPer"  compareValue="1">
+					<![CDATA[ consumption_per  <20 ]]>				
+			</isEqual>
+				<isEqual prepend="AND"  property="consumptionPer"  compareValue="2">
+				<![CDATA[(consumption_per  >=20 and consumption_per<50)]]>	
+			</isEqual>
+				<isEqual prepend="AND"  property="consumptionPer"  compareValue="3">
+				<![CDATA[ consumption_per  >=50]]>	
+			</isEqual>
+			
+
+			<isEqual prepend="AND" property="cardPay" compareValue="T">
+				(t.pay_type like '%4%' or t.pay_type like '%5%')
+			</isEqual>
+			<isEqual prepend="AND" property="cardPay" compareValue="F">
+				(t.pay_type not like '%4%' and t.pay_type not like '%5%' or
+				t.pay_type is null)
+			</isEqual>
+			
+		</dynamic>
+		order by order_field desc, company_shop_id desc) ss
+		) sss
+		where
+		sss.rowId > $startIndex$
+	</select>
+
+	<select id="selRestarauntMoreListCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_company_shop t
+		where  t.company_id <include refid="Product.dataFilterComapny"/>
+		<include refid="CompanyShop.dataFilter"/>
+	<dynamic prepend="">
+		
+		 <isNotEmpty property="timeSpace">
+       <isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  regist_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  regist_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  regist_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  regist_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  regist_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  regist_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]> 
+       </isEqual> 
+      </isNotEmpty>
+      
+      <isNotEmpty property="tagIds" prepend="AND">
+         exists(select r.tag_id from tb_company_shop_tag r where r.delete_flag!=2 and  t.company_shop_id=t.company_shop_id AND r.tag_id in($tagIds$))
+      </isNotEmpty>
+      <isNotEmpty prepend="AND" property="deliverOk">
+		deliver_ok=#deliverOk#
+	  </isNotEmpty>
+      
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' )
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaThirdId">
+				exists(select
+				f.company_shop_id
+				from tb_company_shop_area f
+				where
+				f.area_id=#areaThirdId# and
+				t.company_shop_id=f.company_shop_id)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="categoryId">
+				category_id=#categoryId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="sendTime">
+				send_time=#sendTime#
+			</isNotEmpty>
+
+			
+			<isEqual  prepend="AND" property="sendPrice"  compareValue="0">
+				send_price  = #sendPrice#   and deliver_ok='T' 
+			</isEqual>
+			<isEqual  prepend="AND" property="sendPrice"  compareValue="1">
+					<![CDATA[ send_price  <20  and deliver_ok='T' ]]>				
+			</isEqual>
+				<isEqual  prepend="AND" property="sendPrice"  compareValue="2">
+				<![CDATA[(send_price  >=20 and send_price<50   and deliver_ok='T' )]]>	
+			</isEqual>
+				<isEqual  prepend="AND" property="sendPrice"  compareValue="3">
+				<![CDATA[ send_price  >=50   and deliver_ok='T' ]]>	
+			</isEqual>
+		
+			<isEqual  prepend="AND" property="consumptionPer"  compareValue="1">
+					<![CDATA[ consumption_per  <20 ]]>				
+			</isEqual>
+				<isEqual prepend="AND"  property="consumptionPer"  compareValue="2">
+				<![CDATA[(consumption_per  >=20 and consumption_per<50)]]>	
+			</isEqual>
+				<isEqual prepend="AND"  property="consumptionPer"  compareValue="3">
+				<![CDATA[ consumption_per  >=50]]>	
+			</isEqual>
+			
+			<isEqual prepend="AND" property="cardPay" compareValue="T">
+				(t.pay_type like '%4%' or t.pay_type like '%5%')
+			</isEqual>
+			<isEqual prepend="AND" property="cardPay" compareValue="F">
+				(t.pay_type not like '%4%' and t.pay_type not like '%5%' or
+				t.pay_type is null)
+			</isEqual>
+			
+		</dynamic>
+	</select>
+	<select id="findRestarauntMapList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select lat,lng,address,linkman,linkman_tel as
+		linkmanTel,company_shop_id as companyShopId, name,logo,consumption_per
+		as consumptionPer,star_score as starScore,deliver_ok as deliverOk,
+		work_time as workTime,service_time as serviceTime from
+		(select row_number()over(order by order_field desc,company_shop_id
+		desc)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_company_shop t
+		where lat >0 and lng > 0 and t.company_id <include refid="Product.dataFilterComapny"/> 
+		<include refid="CompanyShop.dataFilter"/>
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' or address like '%'+#keyword#+'%')
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaThirdId">
+				area_id = #areaThirdId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="categoryId">
+				category_id =#categoryId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="latmin">
+			  	 	<![CDATA[ lat >= #latmin# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="latmax">
+			  	 	<![CDATA[ lat <= #latmax# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="lngmin">
+			  	 	<![CDATA[ lng >= #lngmin# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="lngmax">
+			  	 	<![CDATA[ lng <= #lngmax# ]]>
+			</isNotEmpty>
+
+		</dynamic>
+		order by order_field desc, company_shop_id desc) ss
+		) sss
+		where
+		sss.rowId > $startIndex$
+	</select>
+	<select id="findRestarauntMapListCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_company_shop t
+		where lat >0 and lng > 0 and t.company_id <include refid="Product.dataFilterComapny"/> 
+		<include refid="CompanyShop.dataFilter"/>
+		<dynamic prepend="and">
+			<isNotEmpty prepend="AND" property="keyword">
+				(NAME like
+				'%'+#keyword#+'%' or address like '%'+#keyword#+'%')
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="areaThirdId">
+				area_id = #areaThirdId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="categoryId">
+				category_id =#categoryId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="latmin">
+			  	 	<![CDATA[ lat >= #latmin# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="latmax">
+			  	 	<![CDATA[ lat <= #latmax# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="lngmin">
+			  	 	<![CDATA[ lng >= #lngmin# ]]>
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="lngmax">
+			  	 	<![CDATA[ lng <= #lngmax# ]]>
+			</isNotEmpty>
+
+		</dynamic>
+	</select>
+
+	<select id="selectSendAreaList" resultClass="java.util.HashMap">
+		select area_id as
+		areaId,area_name as areaName from tb_area
+		where parent_id != 0 and delete_flag!=2
+	</select>
+	<select id="selectRestaurauntCategory" resultClass="java.util.HashMap">
+		select
+		company_shop_category_id as categoryId,name from tb_company_shop_category where
+		type=2 and delete_flag!=2 
+	</select>
+	<select id="findCategoryFirstList" resultClass="java.util.HashMap">
+		select
+		product_category_id as categoryId,name from tb_product_category where
+		parent_id = 0
+	</select>
+	<select id="selectShopById" parameterClass="Long" resultMap="CompanyShopRes">
+		select * from tb_company_shop where company_shop_id=#value#
+	</select>
+
+	<select id="selectShopPayTypeAndisDeliver" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select pay_type as payType,deliver_ok as
+		deliverOk,work_time as workTime,service_time as serviceTime from
+		tb_company_shop
+		where company_shop_id=#value#
+	</select>
+	<select id="selectShopName" parameterClass="Long" resultClass="String">
+		select name from tb_company_shop where company_shop_id=#value#
+	</select>
+	<!-- 星巴克附近商铺查询 -->
+	
+	<select id="findnearbyShop" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from(select ROW_NUMBER()over(order by
+		ss.company_id desc)rowid,* from
+		(select top ($startIndex$+$size$) s.*
+		from (select * from tb_company_shop
+		where company_id=#companyId# <include refid="CompanyShop.dataFilter"/>
+		)s
+		order by
+		company_id desc)ss ) sss where
+		rowid>$startIndex$;
+	</select>
+	<select id="findnearbyShopCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select COUNT(*) from tb_company_shop
+		where
+		company_id=#companyId# <include refid="CompanyShop.dataFilter"/>
+	</select>
+	<!-- 星巴克附近商铺配送地址范围查询 -->
+	<select id="findnearbyShopArea" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select area_name from tb_area where area_id in (select
+		area_id from
+		tb_company_shop_area where company_shop_id=#value#)
+	</select>
+	<select id="findnearbyShop1" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_company_shop
+		where company_id=#companyId#
+		and company_shop_id=#companyShopId# and delete_flag!=2
+	</select>
+
+	<select id="selCooperatorShopByCompanyId" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select deliver_ok as deliverOk, company_shop_id as companyShopId, [name], logo, address, linkman_tel
+		as linkmanTel from
+		(select cs.deliver_ok, cs.company_shop_id, cs.name, cs.logo, cs.address, cs.linkman_tel,
+		ROW_NUMBER() over (order by cs.company_shop_Id) as rank
+		from tb_company_shop as cs where exists(select yy.company_id from tb_company yy where yy.company_id=#companyId# and yy.company_id=cs.company_id)
+		 <include refid="CompanyShop.dataFilter"/>  
+		) as t
+		where  t.rank between #beginIndex# and #endIndex#
+	</select>
+
+  <select id="findShopAreaList" parameterClass="Long" resultClass="java.util.HashMap">
+   select area_name as areaName, detailed_address as detailedAddress,lat,lng  from tb_area t where t.delete_flag=1 and exists(select * from tb_company_shop_area t1 
+   where t1.delete_flag=1 and t1.area_id=t.area_id  and t1.company_shop_id=#value#)
+  </select>
+ <select id="findCompanyDeliverOk" parameterClass="Long" resultClass="String">
+ select deliver_ok from tb_company_shop where company_shop_id=#value#
+ </select>
+</sqlMap>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Service">
+    <typeAlias alias="Service" type="com.chj.entity.Service"/>
+
+    <resultMap class="Service" id="ServiceRes">
+        <result property="serviceId" column="service_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="seeCount" column="see_count"/>
+        <result property="star" column="star"/>
+        <result property="lng" column="lng"/>
+        <result property="lat" column="lat"/>
+        <result property="userId" column="user_id"/>
+        <result property="type" column="type"/>
+        <result property="companyId" column="company_id"/>
+        <result property="serviceType" column="service_type"/>
+        <result property="image" column="image"/>
+        <result property="releaseTime" column="release_time"/>
+        <result property="summary" column="summary"/>
+
+    </resultMap>
+    
+    <sql id="dataFilter">
+		AND  delete_flag!=2 and ((examine_result=1 and status ='1') 
+		or (examine_result in(1,3) and status ='2') or (examine_result in(2,3) and status ='3'))
+		and company_id not in(select company_id from tb_company where delete_flag=2 or (status=3 and examine_result=1))
+	</sql>
+	
+    <sql id="orderCondition">
+           <isEqual prepend="" property="orderType" compareValue="time">
+				order by company_id $order$
+			</isEqual>
+			<isEqual prepend="" property="orderType" compareValue="browse">
+				order by browse_count $order$
+			</isEqual> 
+	</sql>
+	  <sql id="orderConditionService">
+           <isEqual prepend="" property="orderType" compareValue="time">
+				order by service_id $order$
+			</isEqual>
+			<isEqual prepend="" property="orderType" compareValue="browse">
+				order by see_count $order$
+			</isEqual> 
+	</sql>
+	
+    <select id="findCompanyByKeyword" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    select top $size$   lat,lng,company_id as companyId,name as title,regist_date as createTime, address,browse_count as browseCount from(select
+		ROW_NUMBER()over(<include refid="Service.orderCondition"/>)rowid,* from
+		(select
+		top ($size$+$startIndex$)  lat,lng,browse_count,company_id,name,regist_date, address from tb_company t where
+		1=1 <include refid="Company.dataFilter"/> AND
+t.company_id <include refid="Product.dataFilterComapny"/> and (t.delete_flag !=2 or t.delete_flag  is null)
+		<dynamic prepend="AND">
+			<isNotEmpty prepend="AND" property="keyword">
+				(name like '%'+#keyword#+'%' or address like '%'+#keyword#+'%' or company_Info like '%'+#keyword#+'%')
+			</isNotEmpty>
+		</dynamic>
+<include refid="Service.orderCondition"/>) ss) ssss
+where ssss.rowid>$startIndex$
+    </select>
+    
+    <!-- 首页关键字查询 -->
+    <select id="findServiceByKeyword" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    select top $size$  see_count as browseCount,service_id as serviceId,service_type as serviceType,title as title,release_time as createTime from(select
+		ROW_NUMBER()over(<include refid="Service.orderConditionService"/>)rowid,* from
+		(select
+		top ($size$+$startIndex$) see_count,service_id,service_type,title,release_time from tb_service t where
+t.company_id !=254 and (t.delete_flag !=2 or t.delete_flag  is null)
+	<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(title like '%'+#keyword#+'%'  or  content like '%'+#keyword#+'%')
+			</isNotEmpty>
+		</dynamic>
+<include refid="Service.orderConditionService"/>) ss) ssss
+		where ssss.rowid>$startIndex$
+    </select>
+    
+    <select id="selServiceMoreListByserviceType" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+     
+     select service_id,title,summary,see_count,convert(date,release_time) as release_time,[image] from
+      (select *,ROW_NUMBER() over (order by release_time desc) as rank from tb_service yy where service_type=#serviceType# 
+      <include refid="Service.dataFilter"/> 
+      <isNotEmpty property="timeSpace">
+      
+       <isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  release_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  release_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  release_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  release_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  release_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  release_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]> 
+       </isEqual> 
+      </isNotEmpty>
+      
+      <isNotEmpty property="tagIds" prepend="AND">
+         exists(select r.tag_id from tb_service_tag r where  r.delete_flag!=2 and r.service_id=yy.service_id AND r.tag_id in($tagIds$))
+      </isNotEmpty>
+      ) as t
+      where t.rank between #beginindex# and #endindex#
+      
+      
+    </select>
+      <select id="selServiceMoreListCountByserviceType" parameterClass="java.util.HashMap" resultClass="Long">
+    	select count(*) from tb_service yy where service_type=#serviceType# 
+      <include refid="Service.dataFilter"/> 
+      <isNotEmpty property="timeSpace">
+       <isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  release_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  release_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  release_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  release_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  release_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  release_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]> 
+       </isEqual> 
+      </isNotEmpty>
+      
+      <isNotEmpty property="tagIds" prepend="AND">
+         exists(select r.tag_id from tb_service_tag r where  r.delete_flag!=2 and r.service_id=yy.service_id AND r.tag_id in($tagIds$))
+      </isNotEmpty>
+    </select>
+    
+    
+    <select id="selServiceDetailByServiceId" parameterClass="Long" resultClass="java.util.HashMap">
+     SELECT        s.service_id, s.title, s.[content], s.see_count, convert(date,s.release_time) as release_time,
+                                 (SELECT        COUNT(*) AS Expr1
+                                   FROM            dbo.tb_service_comment
+                                   WHERE        (service_id = s.service_id)) AS commentCount, s.user_id, s.company_id, s.image
+    FROM            dbo.tb_service AS s     WHERE        (s.service_id =#value#)
+    </select>
+
+    <update id="updateServcieSeeCount" parameterClass="Long">
+		update tb_service set see_count=IsNull(see_count,0)+1 where service_id=#value#
+	</update>
+
+    <select id="selServiceTop6ListByCompanyId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        select service_Id as serviceId, title, [image] from
+            (select service_id, title, [image],ROW_NUMBER() over (order by service_Id) as rank
+            from tb_service inner join tb_company
+              on tb_service.company_id = tb_company.company_id
+            where tb_company.company_id = #companyId#) as t
+        where t.rank between #beginIndex# and #endIndex#
+    </select>
+    <select id="selServiceMoreListByUserId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        select * from (select s.service_id,s.title,s.image,convert(date,s.release_time) as release_time,s.see_count,s.summary,s.service_type,ROW_NUMBER() over (order by s.service_id) as rank from tb_service s,
+            (select st.service_id from tb_service_tag st,
+            (select ut.tag_id from tb_user_tag ut where ut.user_id=#userId# group by ut.tag_id) tag
+            where st.tag_id=tag.tag_id group by st.service_id) exp1 where s.service_id=exp1.service_id) as exp2 where exp2.rank between #beginindex# and #endindex#
+    </select>
+
+    <select id="findRankByServiceType" parameterClass="Long" resultClass="java.util.HashMap">
+        select service_id,ROW_NUMBER() over (order by service_id) as rank from tb_service where service_type=(select service_type from tb_service where service_id=#value #) order by release_time desc
+    </select>
+    <select id="findUserServiceList" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+      select top $maxNum$ service_id,title,summary,see_count,convert(date,release_time) as release_time,[image] from tb_service t 
+      where t.service_type=#serviceType# 
+      <include refid="Service.dataFilter"/> 
+      <isNotEmpty property="ids">
+         and t.service_id not in($ids$)
+      </isNotEmpty>
+      <isEqual property="userId" compareValue="-1">
+         order by service_id desc
+      </isEqual>
+        <isEqual property="userId" compareValue="0">
+          and t.tui_order > 0 order by t.tui_order asc
+      </isEqual>
+       <isGreaterThan property="userId" compareValue="0">
+         and exists(select t2.service_id from tb_service_tag t2 where t2.service_id=t.service_id and  t2.delete_flag=1 and 
+         exists(select t1.tag_id from tb_user_tag t1 where t1.tag_id=t2.tag_id and  t1.delete_flag=1 and t1.user_id=#userId#))
+         order by t.service_id desc
+       </isGreaterThan>
+         
+    </select>
+</sqlMap>

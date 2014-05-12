@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Oauth">
+	<typeAlias alias="Oauth" type="com.chj.entity.Oauth" />
+	<resultMap class="Oauth" id="Oauth">
+		<result property="codeIsUsed" column="code_isUsed" />
+		<result property="code" column="code" />
+		<result property="token" column="token" />
+		<result property="userId" column="user_id" />
+		<result property="oauthId" column="oauth_id" />
+		<result property="scope" column="scope" />
+		<result property="userIdCode" column="userIdCode" />
+		<result property="userNameCode" column="userNameCode" />
+		<result property="oauthTime" column="oauth_time" />
+		<result property="pointUrl" column="pointUrl" />
+		<result property="state" column="state" />
+	</resultMap>
+	<insert id="createOauthObject" parameterClass="Oauth">
+		insert into tb_oauth(code_isUsed, code, token, user_id, scope,
+		userIdCode, userNameCode, oauth_time, pointUrl, state)
+		values(#codeIsUsed#, #code#,
+		#token#, #userId#, #scope#, #userIdCode#,
+		#userNameCode#,
+		#oauthTime#, #pointUrl#, #state#);
+		<selectKey keyProperty="oauthId" resultClass="long">
+		<![CDATA[SELECT @@IDENTITY AS ID ]]>
+		</selectKey>
+	</insert>
+	<select id="grantOauthToken" parameterClass="java.util.HashMap"
+		resultMap="Oauth">
+		SELECT * FROM tb_oauth WHERE oauth_time>#authTime#
+		<dynamic>
+			<isNotNull prepend="AND" property="code">
+				code=#code#
+			</isNotNull>
+			<isNotNull prepend="AND" property="token">
+				token=#token#
+			</isNotNull>
+			<isNotNull prepend="AND" property="userId">
+				user_id=#userId#
+			</isNotNull>
+		</dynamic>
+	</select>
+	<update id="updOauthToken" parameterClass="java.util.HashMap">
+		UPDATE tb_oauth SET
+		code_isUsed=#codeIsUsed# WHERE code=#code#
+	</update>
+	<update id="updateOauthDate" parameterClass="Oauth">
+		update tb_oauth set
+		oauth_time=#oauthTime#, code_isUsed=#codeIsUsed# where
+		oauth_id=#oauthId#
+	</update>
+</sqlMap>

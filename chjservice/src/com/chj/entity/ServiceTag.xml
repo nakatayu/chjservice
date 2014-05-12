@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="ServiceTag">
+    <typeAlias alias="ServiceTag" type="com.chj.entity.ServiceTag" />
+
+    <resultMap class="ServiceTag" id="ServiceTagId">
+        <result property="serviceTagId" column="service_tag_id" />
+        <result property="serviceId" column="service_id" />
+        <result property="tagId" column="tag_id" />
+        <result property="addTime" column="add_time" />
+        <result property="status" column="status" />
+    </resultMap>
+
+</sqlMap> 

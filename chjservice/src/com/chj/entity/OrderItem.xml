@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="OrderItem">
+
+	<typeAlias alias="OrderItem" type="com.chj.entity.OrderItem" />
+	<resultMap class="OrderItem" id="OrderItemRes">
+		<result property="orderItemId" column="order_item_id" />
+		<result property="productSkuId" column="product_sku_id" />
+		<result property="orderId" column="order_id" />
+		<result property="productId" column="product_id" />
+		<result property="qty" column="qty" />
+		<result property="total" column="total" />
+		<result property="price" column="price" />
+		<result property="companyShopProductId" column="company_shop_product_id" />
+		<result property="companyShopProductSkuId" column="company_shop_product_sku_id" />
+		
+		<result property="commentText" column="order_item_id" select="OrderItem.selectOrderItemProCommentCount"/>
+	</resultMap>
+	
+	<typeAlias alias="OrderItemAppend" type="com.chj.entity.OrderItemAppend" />
+	<resultMap class="OrderItemAppend" id="OrderItemAppendRes">
+		<result property="orderItemId" column="order_item_id" />
+		<result property="qty" column="qty" />
+		<result property="total" column="total" />
+		<result property="price" column="price" />
+		<result property="appendInfo" column="append_id" select="OrderItem.selectAppendInfo"/>
+		<result property="parentName" column="append_id" select="OrderItem.selectParentNameById"/>
+		
+	</resultMap>
+
+	<select id="selectOrderItem" parameterClass="Long" resultMap="OrderItemRes">
+		select * from tb_order_item where order_id=#value# and delete_flag=1
+	</select>
+   <select id="findProductCommentCountByOrderid" parameterClass="Long" resultClass="Long">
+    select COUNT(*) from tb_product_comment t1 where t1.delete_flag=1 
+    and exists(select t.order_item_id from tb_order_item t
+     where t.order_item_id=t1.order_item_id and t.order_id=#value# and t.delete_flag=1)
+   </select>
+	<insert id="insertOrderItem" parameterClass="OrderItem">
+		INSERT INTO
+		tb_order_item(order_id,product_sku_id,product_id,qty,total,price,company_shop_product_id,company_shop_product_sku_id)
+		VALUES(#orderId#,#productSkuId#,#productId#,#qty#,#total#,#price#,#companyShopProductId#,#companyShopProductSkuId#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+	<update id="reduceProductStock" parameterClass="OrderItem">
+	 update tb_company_shop_product_sku set stock=stock-$qty$ where stock >=$qty$ and company_shop_product_sku_id=#companyShopProductSkuId#
+	</update>
+	<insert id="addUserOrderAppend" parameterClass="java.util.HashMap">
+		insert into
+		tb_order_item_append(order_item_id,qty,price,total,append_id)
+		values(#orderItemId#,#qty#,#price#,#total#,#appendId#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+	<select id="findOrderAppendItem" parameterClass="Long"
+		resultMap="OrderItemAppendRes">
+		select * from tb_order_item_append where order_item_id=#value#
+	</select>
+	<select id="selectParentNameById" parameterClass="Long"
+		resultClass="String">
+		select name
+		from tb_append where append_id in(select parent_id from tb_append where append_id=#value#)
+	</select>
+	<select id="selectAppendInfo" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select name,is_ckeckbox as isCheckbox
+		from tb_append where append_id =#value#
+	</select>
+	<select id="selectOrderItemProCommentCount" parameterClass="Long" resultClass="String">
+	  select top 1 content from tb_product_comment where order_item_id=#value# and delete_flag!=2
+	</select>
+</sqlMap>

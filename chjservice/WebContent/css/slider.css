@@ -1,0 +1,43 @@
+
+img {border:0 none;}
+ul,li{ list-style-type:none;}
+
+#warp {
+	PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; HEIGHT: 256px;; PADDING-TOP: 0px;
+}
+.banner {
+	Z-INDEX: 99; MARGIN: 0px auto; WIDTH: 950px; HEIGHT: 256px; _width: 950px;
+}
+.bannerImg {
+	width:950px;
+	POSITION: relative; PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-LEFT: 0px; WIDTH: 950px; PADDING-RIGHT: 0px; FLOAT: left; PADDING-TOP: 0px
+}
+.bannerImg .bannerPage {
+	POSITION: absolute; 
+	TOP: 200px; 
+	width:440px;
+	left:440px;
+}
+.bannerImg .bannerPage A {
+	MARGIN-RIGHT: 2px
+}
+.bannerImg .bannerPage A IMG {
+	VERTICAL-ALIGN: middle
+}
+.slides_container {
+	POSITION: relative; WIDTH: 950px; OVERFLOW: hidden
+}
+.pagination {
+	MARGIN: 26px auto 0px;
+	position:absolute;
+	Z-INDEX: 999;
+}
+.pagination LI {
+	MARGIN: 0px 1px; FLOAT: left;
+}
+.pagination LI A {
+	BACKGROUND-IMAGE: url(../images/pagination.png); WIDTH: 15px; DISPLAY: block; BACKGROUND-POSITION: 0px -1px; FLOAT: left; HEIGHT: 0px; OVERFLOW: hidden; PADDING-TOP: 12px
+}
+.pagination LI.current A {
+	BACKGROUND-POSITION: 0px -18px
+}

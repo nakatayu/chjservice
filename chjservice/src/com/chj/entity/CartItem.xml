@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="CartItem">
+
+	<typeAlias alias="CartItem" type="com.chj.entity.CartItem" />
+
+	<resultMap class="CartItem" id="CartItemRes">
+		<result property="cartItemId" column="cart_item_id" />
+		<result property="productSkuId" column="product_sku_id" />
+		<result property="userId" column="user_id" />
+		<result property="shopId" column="shop_id" />
+		<result property="productId" column="product_id" />
+		<result property="oldPrice" column="old_price" />
+		<result property="createTime" column="create_time" />
+		<result property="qty" column="qty" />
+		<result property="price" column="price" />
+		<result property="companyShopProductId" column="company_shop_product_id" />
+		<result property="companyShopProductSkuId" column="company_shop_product_sku_id" />
+
+	</resultMap>
+
+	<resultMap class="CartItem" id="CartItemRes">
+		<result property="cartItemId" column="cart_item_id" />
+		<result property="productSkuId" column="product_sku_id" />
+		<result property="userId" column="user_id" />
+		<result property="shopId" column="shop_id" />
+		<result property="productId" column="product_id" />
+		<result property="oldPrice" column="old_price" />
+		<result property="createTime" column="create_time" />
+		<result property="qty" column="qty" />
+		<result property="price" column="price" />
+		<result property="companyShopProductId" column="company_shop_product_id" />
+		<result property="companyShopProductSkuId" column="company_shop_product_sku_id" />
+	</resultMap>
+
+	<select id="selectUserCartItem" parameterClass="java.util.HashMap"
+		resultMap="CartItemRes">
+		select * from tb_cart_item ff
+		where ff.user_id=#userId#
+		and
+		ff.shop_id=#companyShopId#
+		and ff.product_id=#productId#
+		and
+		ff.product_sku_id=#productSkuId#
+	</select>
+
+	<select id="selectUserCartShop" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select company_shop_id as companyShopId,name,deliver_money
+		as deliverMoney,deliver_ok  as deliverOk
+		from tb_company_shop where company_shop_id in
+		(select
+		distinct shop_id from tb_cart_item s where user_id=#value#
+		and
+		exists(select t.product_id from tb_product t where
+		t.product_id=s.product_id))
+	</select>
+	
+	<select id="findUserCartShopIdsList" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select shop_id as shopId,create_time from tb_cart_item s where user_id=#value# and delete_flag=1
+		and	exists(select t.product_id from tb_product t where
+		t.product_id=s.product_id)
+		and exists(select t1.company_shop_id from tb_company_shop t1 where t1.delete_flag=1
+		and t1.company_shop_id=s.shop_id) order by s.create_time desc
+		
+	</select>
+	<select id="findUserCartShopInfo" parameterClass="Long" resultClass="java.util.HashMap">
+	    select company_shop_id as companyShopId,name,deliver_money
+		as deliverMoney,deliver_ok  as deliverOk
+		from tb_company_shop where company_shop_id =#value#
+	</select>
+
+	<select id="selectCartItemList" parameterClass="java.util.HashMap"
+		resultMap="CartItemRes">
+		select * from tb_cart_item s where shop_id=#shopId# and
+		user_id=#userId# and exists(select t.product_id from tb_product t
+		where t.product_id=s.product_id) order by cart_item_id desc
+	</select>
+
+	<update id="updateUserCartCount" parameterClass="java.util.HashMap">
+		update
+		tb_cart_item set qty=qty+$qty$,create_time=#createTime# where cart_item_id=#cartItemId#
+	</update>
+	<delete id="cancelCarProduct" parameterClass="java.util.HashMap">
+		delete from
+		tb_cart_item where product_sku_id=#skuId# and user_id=#userId#
+		and
+		product_id =#productId# and cart_item_id =#cartItemId# and
+		shop_id=#shopId#
+	</delete>
+	<insert id="insertUserCart" parameterClass="java.util.HashMap">
+		INSERT INTO
+		tb_cart_item(product_sku_id,price,qty,product_id,user_id,shop_id,create_time,old_price,company_shop_product_id,company_shop_product_sku_id)
+		VALUES(#productSkuId#,#price#,#qty#,#productId#,#userId#,#companyShopId#,#createTime#,#oldPrice#,#companyShopProductId#,#companyShopProductSkuId#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+	<insert id="addUserCartAppend" parameterClass="java.util.HashMap">
+		insert into
+		tb_cart_item_append(cart_item_id,qty,price,append_id)values(#cartId#,#qty#,#price#,#appendId#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+	<select id="findCartAppendItem" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select cia.cart_item_append_id
+		nid,cia.append_id as
+		appendId,cia.price,cia.qty,a.name,p.name parentName,p.is_ckeckbox
+		isCheckbox from tb_cart_item_append cia,tb_append a,tb_append p where
+		a.append_id=cia.append_id and a.parent_id=p.append_id and
+		cia.cart_item_id=#cartItemId#
+	</select>
+
+	<delete id="deleteCartAppend" parameterClass="Long">
+		delete from
+		tb_cart_item_append where cart_item_id=#value#
+	</delete>
+	<delete id="deleteCartItem" parameterClass="Long">
+		delete from
+		tb_cart_item where cart_item_id=#value#
+	</delete>
+	<!-- 登陆成功后调用 -->
+	<select id="findUserCartItemListCount" parameterClass="Long"
+		resultClass="Long">
+		select
+		count(*) from tb_cart_item s where user_id=#value#
+		and exists(select
+		t.product_id from tb_product t where
+		t.product_id=s.product_id)
+	</select>
+	<select id="checkCartOfUser" parameterClass="java.util.HashMap"
+		resultClass="Integer">
+		select COUNT(*) from tb_cart_item where
+		product_id=#productId# and user_id=#userId# and delete_flag!=2
+	</select>
+	<select id="checkOrderToUser" parameterClass="java.util.HashMap"
+		resultClass="Integer">
+		select COUNT(*) from tb_order o
+		where o.user_id=#userId# and o.delete_flag!=2 and o.status!='3' and
+		o.status!='6' and exists(select * from tb_order_item i
+		where
+		o.order_id=i.order_id and i.product_id=#productId# and delete_flag!=2)
+
+	</select>
+
+</sqlMap>

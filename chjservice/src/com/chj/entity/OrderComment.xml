@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="OrderComment">
+
+	<typeAlias alias="OrderComment" type="com.chj.entity.OrderComment" />
+	
+	<resultMap class="OrderComment" id="OrderCommentRes">
+	  <result property="orderCommentId" column="order_comment_id"/>
+	  <result property="orderId" column="order_id"/>
+      <result property="userId" column="user_id"/>
+      <result property="content" column="content"/>
+      <result property="createDate" column="create_date"/>
+      <result property="name" column="name"/>
+      
+     </resultMap>
+	
+	<select id="selectOrderComment" parameterClass="Long" resultMap="OrderCommentRes">
+	    select * from tb_order_comment where order_id=#value# order by create_date desc
+	</select>
+	
+<insert id="insertOrderComment" parameterClass="OrderComment">
+		INSERT INTO tb_order_comment(order_id,user_id,name,content,create_date)
+		VALUES(#orderId#,#userId#,#name#,#content#,#createDate#)
+		<selectKey  resultClass="Long" type="post">
+			select @@IDENTITY as value
+		</selectKey>
+</insert>
+
+
+</sqlMap>

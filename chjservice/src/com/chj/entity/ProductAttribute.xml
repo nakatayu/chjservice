@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="ProductAttribute">
+
+	<typeAlias alias="ProductAttribute" type="com.chj.entity.ProductAttribute" />
+	<resultMap class="ProductAttribute" id="ProductAttributeResultMap">
+		<result property="productAttributeId" column="product_attribute_id" />
+		<result property="name" column="name" />
+		<result property="createDate" column="create_date" />
+		<result property="values" column="product_attribute_id" select="ProductAttribute.selectProductAttributeValue"/>
+	</resultMap>
+	
+	<typeAlias alias="ProductAttributeValue" type="com.chj.entity.ProductAttributeValue" />
+	<resultMap class="ProductAttributeValue" id="ProductAttributeValueResultMap">
+		<result property="productAttributeValueId" column="product_attribute_value_id" />
+		<result property="name" column="name" />
+		<result property="productAttributeId" column="product_attribute_id" />
+	</resultMap>
+	
+	<select id="searchProductAttribute" parameterClass="Long" resultMap="ProductAttributeResultMap">
+		select * from tb_product_attribute where product_attribute_id in(
+select product_attribute_id from tb_product_attribute_value where product_attribute_value_id in(
+select product_attribute_value_id from tb_product_attribute_value_sku where product_sku_id in(
+select product_sku_id from tb_company_shop_product_sku
+ where company_shop_product_id=#value# and delete_flag!=2)))
+	</select>
+	<select id="selectProductAttributeValue" parameterClass="long" resultMap="ProductAttributeValueResultMap">
+		select * from tb_product_attribute_value where product_attribute_id = #value# and delete_flag!=2
+	</select>
+
+
+</sqlMap>

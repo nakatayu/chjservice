@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Topic">
+	<typeAlias alias="Topic" type="com.chj.entity.Topic" />
+	<resultMap class="Topic" id="TopicRes">
+		<result property="topicId" column="topic_id" />
+		<result property="userId" column="user_id" />
+		<result property="summary" column="summary" />
+		<result property="topicName" column="topic_name" />
+		<result property="createTime" column="create_time" />
+		<result property="topicViews" column="topic_views" />
+		<result property="topicContent" column="topic_content" />
+		<result property="status" column="status" />
+		<result property="circleId" column="circle_id" />
+		<result property="activityId" column="activity_id" />
+		<result property="listTop" column="list_top" />
+		<result property="companyId" column="company_id" />
+		<result property="classics" column="classics" />
+		<result property="examineResult" column="examine_result" />
+
+		<result property="topicImage" column="topic_id" select="Topic.selectTopicImage" />
+		<result property="commentCount" column="topic_id"
+			select="Topic.selectCommentCount" />
+		<result property="tagList" column="topic_id" select="Topic.selectTopicTagList" />
+	</resultMap>
+
+	<typeAlias alias="TopicPart" type="com.chj.entity.TopicPart" />
+	<resultMap class="TopicPart" id="TopicPartRes">
+		<result property="topicId" column="topic_id" />
+		<result property="userId" column="user_id" />
+		<result property="summary" column="summary" />
+		<result property="topicName" column="topic_name" />
+		<result property="createTime" column="create_time" />
+		<result property="topicViews" column="topic_views" />
+		<result property="status" column="status" />
+		<result property="circleId" column="circle_id" />
+		<result property="activityId" column="activity_id" />
+		<result property="listTop" column="list_top" />
+		<result property="companyId" column="company_id" />
+		<result property="classics" column="classics" />
+		<result property="examineResult" column="examine_result" />
+
+		<result property="topicImage" column="topic_id" select="Topic.selectTopicImage" />
+		<result property="commentCount" column="topic_id"
+			select="Topic.selectCommentCount" />
+		<result property="tagList" column="topic_id" select="Topic.selectTopicTagList" />
+		<result property="userNamePict" column="user_id" select="User.findUserNickName" />
+
+	</resultMap>
+
+	<typeAlias alias="UserCollection" type="com.chj.entity.UserCollection" />
+	<resultMap class="UserCollection" id="UserCollectionRes">
+		<result property="userId" column="user_id" />
+		<result property="objectId" column="object_id" />
+		<result property="type" column="type" />
+		<result property="createTime" column="create_time" />
+
+		<result property="topicPart" column="object_id" select="Topic.findTopicPartById" />
+	</resultMap>
+
+
+	<sql id="dataFilter">
+		where (examine_result=1 or(examine_result!='1' and
+		status='2')) and delete_flag!=2
+		and (company_id not in(select company_id from tb_company where delete_flag=2 or (status=3 and examine_result=1))
+		or company_id is null)
+	</sql>
+
+	<sql id="orderCondition">
+		<isEqual prepend="" property="orderType" compareValue="time">
+			order by
+			topic_id $order$
+		</isEqual>
+		<isEqual prepend="" property="orderType" compareValue="browse">
+			order by
+			topic_views $order$
+		</isEqual>
+	</sql>
+
+
+	<!-- 首页关键字查询 -->
+	<select id="findTopicByKeyword" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select top $size$ topic_id as topicId,topic_name as title,create_time
+		as createTime,topic_views as browseCount,status,examine_result as
+		examineResult,circle_id as circleId,
+		user_id as userId from(select
+		ROW_NUMBER()over(
+		<include refid="Topic.orderCondition" />
+		)rowid,* from
+		(select
+		top ($startIndex$+$size$)
+		topic_id,topic_name,create_time,topic_views,status,examine_result,user_id
+		,circle_id from tb_topic t
+		<include refid="Topic.dataFilter" />
+		<dynamic prepend="">
+			<isNotEmpty prepend="AND" property="keyword">
+				(topic_name like '%'+#keyword#+'%'  or topic_content like '%'+#keyword#+'%' )
+			</isNotEmpty>
+			<include refid="Topic.orderCondition" />
+		</dynamic>
+		) ss) ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<!-- 好友的新建话题 -->
+	<select id="selectUserFriendHomeTopicList" parameterClass="java.util.HashMap"
+		resultMap="TopicPartRes">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		topic_id
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from
+		tb_topic t
+		<include refid="Topic.dataFilter" /> and t.user_id
+		=#userId#
+		order by topic_id desc) ss) ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<!-- 好友的新建话题 -->
+	<select id="selectUserFriendTopicList" parameterClass="java.util.HashMap"
+		resultMap="TopicPartRes">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		topic_id
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from
+		tb_topic t
+		<include refid="Topic.dataFilter" /> and t.user_id
+		!=#userId# and
+		exists(
+		select t1.* from tb_user_friend t1 where
+		user_id=#userId# and
+		t.user_id=t1.friend_id)
+		order by topic_id desc) ss)
+		ssss
+		where ssss.rowid>$startIndex$
+	</select>
+
+	<select id="findTopicPartById" parameterClass="Long" resultMap="TopicPartRes">
+		select * from tb_topic t where t.topic_id=#value#
+	</select>
+	<select id="selectUserCollectionTopic" parameterClass="java.util.HashMap"
+		resultMap="UserCollectionRes">
+		select top $size$ * from(select
+		ROW_NUMBER()over(order by
+		create_time
+		desc)rowid,* from
+		(select
+		top ($startIndex$+$size$) * from
+		tb_user_collection t0
+		where user_id=#userId# and type=4 and
+		do_type=#dotype#
+		and exists(select t1.topic_id from tb_topic t1 where
+		t0.object_id=t1.topic_id)
+		order by create_time desc) ss) ssss
+		where
+		ssss.rowid>$startIndex$
+	</select>
+
+	<select id="selectTopicImage" parameterClass="Long" resultClass="String">
+		select top 1 file_path from tb_topic_image where delete_flag!=2 and
+		topic_id=#topicId#
+	</select>
+	<select id="findUserTopic" parameterClass="java.util.HashMap"
+		resultMap="TopicPartRes">
+		select * from
+		(select row_number()over(
+		<include refid="Topic.orderCondition" />
+		)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_topic t
+		<include refid="Topic.dataFilter" />
+		<dynamic prepend="">
+
+			<isEqual prepend="AND" property="userTopic" compareValue="1">
+				user_id=#userId#
+			</isEqual>
+			<isEqual prepend="AND" property="userTopic" compareValue="0">
+				exists(select s.topic_id from tb_topic_comment s where
+				s.topic_id=t.topic_id and s.user_id=#userId#)
+			</isEqual>
+
+			<isNotEmpty property="timeSpace">
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  create_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  create_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  create_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  create_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+				</isEqual>
+			</isNotEmpty>
+
+			<isNotEmpty property="tagIds" prepend="AND">
+				exists(select
+				r.tag_id from tb_topic_tag r where r.delete_flag!=2 and
+				r.topic_id=t.topic_id AND r.tag_id in($tagIds$))
+			</isNotEmpty>
+
+		</dynamic>
+		<include refid="Topic.orderCondition" />
+		) ss
+		) sss
+		where sss.rowId >
+		$startIndex$
+	</select>
+	<select id="findUserTopicCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_topic t
+		<include refid="Topic.dataFilter" />
+		<dynamic prepend="">
+
+			<isEqual prepend="AND" property="userTopic" compareValue="1">
+				user_id=#userId#
+			</isEqual>
+			<isEqual prepend="AND" property="userTopic" compareValue="0">
+				exists(select s.topic_id from tb_topic_comment s where
+				s.topic_id=t.topic_id and s.user_id=#userId#)
+			</isEqual>
+
+			<isNotEmpty property="timeSpace">
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  create_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  create_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  create_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  create_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+				</isEqual>
+			</isNotEmpty>
+
+			<isNotEmpty property="tagIds" prepend="AND">
+				exists(select
+				r.tag_id from tb_topic_tag r where r.delete_flag!=2 and
+				r.topic_id=t.topic_id AND r.tag_id in($tagIds$))
+			</isNotEmpty>
+
+		</dynamic>
+	</select>
+
+	<update id="delecteUserTopic" parameterClass="java.util.HashMap">
+		update tb_topic set
+		delete_flag=2 WHERE topic_id=#topicId# AND user_id=#userId#
+	</update>
+	<select id="findUserInfoById" parameterClass="Long" resultClass="java.util.HashMap">
+		select head_picture as headPicture,nick_name as nickName from tb_user
+		where user_id =#value#
+	</select>
+
+	<select id="findTopicList" parameterClass="java.util.HashMap"
+		resultMap="TopicPartRes">
+		select * from
+		(select row_number()over(order by list_top desc,topic_id
+		desc)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_topic t
+		<include refid="Topic.dataFilter" />
+		<dynamic prepend="">
+
+			<isNotEmpty prepend="AND" property="circleId">
+				t.circle_id=#circleId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="keyword">
+				t.topic_name like
+				'%'+#keyword#+'%'
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="classics">
+				t.classics>#classics#
+				and
+				company_id in(select distinct OrganizationalID from Personnel
+				where Type=1)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="coumfiled">
+				(t.$coumfiled$ is not null or t.$coumfiled$!=null)
+				<isEqual prepend="AND" property="coumfiled" compareValue="user_id">
+					circle_id is null AND (classics =0 or classics is null)
+				</isEqual>
+			</isNotEmpty>
+
+			<isNotEmpty property="timeSpace">
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  create_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  create_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  create_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  create_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+				</isEqual>
+			</isNotEmpty>
+
+			<isNotEmpty property="tagIds" prepend="AND">
+				exists(select
+				r.tag_id from tb_topic_tag r where r.delete_flag!=2 and
+				r.topic_id=t.topic_id AND r.tag_id in($tagIds$))
+			</isNotEmpty>
+
+		</dynamic>
+		order by list_top desc, topic_id desc) ss
+		) sss
+		where sss.rowId >
+		$startIndex$
+	</select>
+	<select id="findTopicListCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_topic t
+		<include refid="Topic.dataFilter" />
+		<dynamic prepend="">
+
+			<isNotEmpty prepend="AND" property="circleId">
+				t.circle_id=#circleId#
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="keyword">
+				t.topic_name like
+				'%'+#keyword#+'%'
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="classics">
+				t.classics>#classics#
+				and
+				company_id in(select distinct OrganizationalID from Personnel
+				where Type=1)
+			</isNotEmpty>
+			<isNotEmpty prepend="AND" property="coumfiled">
+				(t.$coumfiled$ is not null or t.$coumfiled$!=null)
+				<isEqual prepend="AND" property="coumfiled" compareValue="user_id">
+					circle_id is null AND (classics =0 or classics is null)
+				</isEqual>
+			</isNotEmpty>
+
+			<isNotEmpty property="timeSpace">
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  create_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  create_time >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  create_time <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]>
+				</isEqual>
+
+				<isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  create_time >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  create_time <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]>
+				</isEqual>
+			</isNotEmpty>
+
+			<isNotEmpty property="tagIds" prepend="AND">
+				exists(select
+				r.tag_id from tb_topic_tag r where r.delete_flag!=2 and
+				r.topic_id=t.topic_id AND r.tag_id in($tagIds$))
+			</isNotEmpty>
+
+		</dynamic>
+	</select>
+<select id="findClassicTopTopicList" resultMap="TopicPartRes">
+		select top 6 * from tb_topic t
+		<include refid="Topic.dataFilter" />
+		and t.classics>0 and web_extend >0
+		and company_id in(select distinct OrganizationalID from Personnel	where Type=1)
+		and list_top>0
+		order by list_top desc, topic_id desc
+</select>
+	<select id="findClassicTopicList" parameterClass="java.util.HashMap"
+		resultMap="TopicPartRes">
+		select * from
+		(select row_number()over(order by topic_id	desc)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_topic t
+		<include refid="Topic.dataFilter" />
+		and	t.classics>0 and web_extend >0
+		and company_id in(select distinct OrganizationalID from Personnel where Type=1) and list_top=0
+		order by topic_id desc) ss
+		) sss
+		where sss.rowId > $startIndex$
+	</select>
+	
+	<insert id="insertTopic" parameterClass="Topic">
+		insert into
+		tb_topic(topic_name,topic_content,user_id,status,topic_views,create_time,summary
+		<isNotEmpty property="examineResult">
+			,examine_result
+		</isNotEmpty>
+		<isNotEmpty property="circleId">
+			,circle_id
+		</isNotEmpty>
+		<isNotEmpty property="activityId">
+			,activity_id
+		</isNotEmpty>
+		)
+		values(#topicName#,#topicContent#,#userId#,#status#,#topicViews#,#createTime#,#summary#
+		<isNotEmpty property="examineResult">
+			,#examineResult#
+		</isNotEmpty>
+		<isNotEmpty property="circleId">
+			,#circleId#
+		</isNotEmpty>
+		<isNotEmpty property="activityId">
+			,#activityId#
+		</isNotEmpty>
+		)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+	<insert id="insertTopicTag" parameterClass="java.util.HashMap">
+		insert into
+		tb_topic_tag(tag_id,topic_id,create_time)
+		values(#tagId#,#topicId#,#createTime#)
+	</insert>
+
+	<insert id="insertTopicImage" parameterClass="java.util.HashMap">
+		insert into
+		tb_topic_image(topic_id,file_path,create_time)
+		values(#topicId#,#filePath#,#createTime#)
+	</insert>
+
+	<select id="selectCommentCount" parameterClass="Long"
+		resultClass="Long">
+		select count(*) from tb_topic_comment t
+		where
+		t.topic_id=#value#
+	</select>
+	<select id="selectTopicTagList" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select tag_id as tagId,tag_name as tagName from tb_tag s
+		where s.tag_id in(select t.tag_id from tb_topic_tag t
+		where
+		t.topic_id=#value#)
+	</select>
+	<select id="findTopicById" parameterClass="Long" resultMap="TopicRes">
+		select * from tb_topic t where t.topic_id=#value#
+	</select>
+	<select id="findTopicImageList" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select topic_img_id as topicImageId,file_path as filePath
+		from
+		tb_topic_image where topic_id=#value# and delete_flag!=2
+	</select>
+	<select id="findHotTopicList" parameterClass="java.util.HashMap"
+		resultMap="TopicPartRes">
+		select * from tb_topic ssss where exists
+		(select * from
+		(select row_number()over(order by count desc)rowId,*
+		from (select top
+		($startIndex$+$size$) COUNT(*) as count,topic_id from
+		tb_topic_comment
+		t
+		group by topic_id order by count desc) ss
+		) sss
+		where sss.rowId >
+		$startIndex$ and sss.topic_id=ssss.topic_id)
+	</select>
+
+	<update id="updateTopicDelete" parameterClass="java.util.HashMap">
+		update tb_topic
+		set delete_flag=2 where topic_id=#topicId#
+	</update>
+	<update id="updateTopicTop" parameterClass="java.util.HashMap">
+		update tb_topic set
+		list_top=#type# where topic_id=#topicId#
+	</update>
+
+	<select id="finDelectTopicArean" parameterClass="java.util.HashMap"
+		resultMap="TopicPartRes">
+		select * from
+		(select row_number()over(order by create_time
+		desc)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_topic t
+		<include refid="Topic.dataFilter" />
+		<isNotEmpty property="topicId">
+		 and topic_id !=#topicId#
+		</isNotEmpty>
+		and ( user_id!='' or user_id is not null) and circle_id is null
+		order by create_time desc) ss
+		) sss
+		where sss.rowId >
+		$startIndex$
+	</select>
+
+	<update id="updateTopic" parameterClass="Topic">
+		update tb_topic set
+		topic_name=#topicName#,topic_content=#topicContent#,
+		summary=#summary#,status=#status#,examine_result=#examineResult# where
+		topic_id=#topicId#
+	</update>
+
+	<update id="deleteTopicImages" parameterClass="Long">
+		update
+		tb_topic_image SET delete_flag=2 where topic_id=#value#
+	</update>
+	<delete id="deleteTopicTags" parameterClass="Long">
+		delete from
+		tb_topic_tag where topic_id=#value#
+	</delete>
+	
+	<select id="findTopicRecommend" parameterClass="java.util.HashMap"
+		resultMap="TopicPartRes">
+		select top $maxNum$ * from tb_topic t
+		<include refid="Topic.dataFilter" />
+		AND circle_id is null
+		<isNotEmpty prepend="AND" property="topicId">
+			and topic_id!=#topicId#
+		</isNotEmpty>
+		<isNotEmpty property="ids">
+         and topic_id not in($ids$)
+      </isNotEmpty> 
+		<isEqual property="userId" compareValue="-1">
+         order by topic_id desc
+      </isEqual>
+		<isEqual property="userId" compareValue="0">
+		   and tui_order > 0 order by tui_order asc
+		</isEqual>
+		 <isGreaterThan property="userId" compareValue="0">
+		     and exists(select * from tb_topic_tag t1 where t1.delete_flag=1 
+		     and  t1.topic_id=t.topic_id and 
+		     exists(select t2.tag_id from tb_user_tag t2 where t2.delete_flag=1 and t2.tag_id=t1.tag_id and t2.user_id=#userId#))
+		       order by topic_id desc
+		 </isGreaterThan>
+		
+	</select>
+	
+	<select id="findTopicAndUserTagList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	  select tag_id as tagId,tag_name as tagName from tb_tag t where t.delete_flag=1 
+	  <isNotEmpty property="ids">
+         and t.tag_id not in($ids$)
+      </isNotEmpty> 
+      <isEqual property="userId" compareValue="0">
+         and   exists(select t1.tag_id  from tb_topic_tag t1 where  t.tag_id=t1.tag_id and t1.delete_flag=1  and  t1.topic_id=#topicId#)
+       </isEqual>
+      <isGreaterThan property="userId" compareValue="0">
+          and  exists(select t1.tag_id  from tb_topic_tag t1 where  t.tag_id=t1.tag_id and t1.delete_flag=1  and  t1.topic_id=#topicId#
+	      and exists(select t2.tag_id  from tb_user_tag t2 where t1.tag_id=t2.tag_id and t2.delete_flag=1 and t2.user_id=#userId#))
+        </isGreaterThan>
+	</select>
+	
+</sqlMap>

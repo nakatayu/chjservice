@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>    
+<!DOCTYPE sqlMapConfig           
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map Config 2.0//EN"           
+    "http://ibatis.apache.org/dtd/sql-map-config-2.dtd">
+<sqlMapConfig>
+
+	<settings 
+		cacheModelsEnabled="true"
+		useStatementNamespaces="true"
+        lazyLoadingEnabled="true"
+		enhancementEnabled="true"
+		errorTracingEnabled="true"
+		maxTransactions="512"
+		maxSessions="1024"
+		maxRequests="2014"/>
+
+	<sqlMap resource="com/chj/entity/User.xml" />
+	<sqlMap resource="com/chj/entity/ProductAttribute.xml" />
+	<sqlMap resource="com/chj/entity/CompanyShopProductSku.xml" />
+	<sqlMap resource="com/chj/entity/OrderComment.xml" />
+	<sqlMap resource="com/chj/entity/VerifyMessage.xml" />
+	<sqlMap resource="com/chj/entity/Tag.xml" />
+	<sqlMap resource="com/chj/entity/UserTag.xml" />
+	<sqlMap resource="com/chj/entity/UserAddress.xml" />
+	<sqlMap resource="com/chj/entity/Product.xml" />
+	<sqlMap resource="com/chj/entity/ProductSku.xml" />
+	<sqlMap resource="com/chj/entity/CompanyShop.xml" />
+	<sqlMap resource="com/chj/entity/Company.xml" />
+	<sqlMap resource="com/chj/entity/UserCollection.xml" />
+	
+	<sqlMap resource="com/chj/entity/Topic.xml" />
+	<sqlMap resource="com/chj/entity/Circle.xml" />
+	<sqlMap resource="com/chj/entity/Activity.xml" />
+	
+	<sqlMap resource="com/chj/entity/CartItem.xml" />
+	<sqlMap resource="com/chj/entity/Order.xml" />
+	<sqlMap resource="com/chj/entity/OrderItem.xml" />
+	<sqlMap resource="com/chj/entity/OrderFlow.xml" />
+	<sqlMap resource="com/chj/entity/Area.xml" />
+	<sqlMap resource="com/chj/entity/TopicComment.xml" />
+	<sqlMap resource="com/chj/entity/Service.xml" />
+	<sqlMap resource="com/chj/entity/ActivityComment.xml" />
+    <sqlMap resource="com/chj/entity/ServiceTag.xml" />
+    <sqlMap resource="com/chj/entity/AskOAuth.xml" />
+    <sqlMap resource="com/chj/entity/Oauth.xml" />
+    <sqlMap resource="com/chj/entity/DepuGoods.xml" />
+	
+</sqlMapConfig>  

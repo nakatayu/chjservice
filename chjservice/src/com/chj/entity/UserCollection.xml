@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+    <sqlMap namespace="UserCollection">
+ 
+    <typeAlias alias="UserCollection" type="com.chj.entity.UserCollection"/>
+    <resultMap class="UserCollection" id="UserCollectionRes">
+    <result property="userId" column="user_id"/>
+    <result property="objectId" column="object_id"/>
+    <result property="type" column="type"/>
+    <result property="createTime" column="create_time"/>
+    
+    </resultMap>
+    
+    
+    <select id="selectUserCollectionResta" parameterClass="java.util.HashMap" resultClass="Long">
+       select count(*) from tb_user_collection where user_id=#userId# and object_id=#objectId# and type=#type# and do_type='1'
+    </select>
+
+    <select id="selectUserCollection" parameterClass="java.util.HashMap" resultClass="Long">
+       select count(*) from tb_user_collection where user_id=#userId# and object_id=#objectId# and type=#type# and do_type=#doType#
+    </select>
+
+    
+   <insert id="insertUserCollection" parameterClass="UserCollection">
+		INSERT  INTO tb_user_collection(user_id,object_id,type,do_type,create_time) VALUES(#userId#, #objectId#,#type#,#doType#,getdate())
+	</insert>
+    
+    </sqlMap>

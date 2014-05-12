@@ -1,0 +1,15 @@
+.btn_blue  div{
+	padding-left:16px;
+	padding-right:16px;
+	padding-top:8px;
+	padding-bottom:8px;
+	background:#008b90;
+	border:1px solid #eee;
+	color:#fff;
+	text-align:center;
+	width:60px;
+}
+ a:hover div{
+	color:005750;
+	cursor:pointer;
+}

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap
+        PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"
+        "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Company">
+    <typeAlias alias="Company" type="com.chj.entity.Company"/>
+    <resultMap class="Company" id="CompanyRes">
+        <result property="companyId" column="company_id"/>
+        <result property="name" column="name"/>
+        <result property="address" column="address"/>
+        <result property="email" column="email"/>
+        <result property="logo" column="logo"/>
+        <result property="starScore" column="star_score"/>
+        <result property="registDate" column="regist_date" />
+        <result property="companyInfo" column="company_Info" />
+        <result property="browseCount" column="browse_count" />
+        <result property="companyType" column="company_Type" />
+        <result property="linkman" column="linkman" />
+        <result property="linkmanTel" column="linkman_Tel" />
+        <result property="companyURL" column="companyURL" />
+    </resultMap>
+    
+    <sql id="dataFilter">
+		AND ((examine_result=1 and status !='3')
+		or(examine_result!='1' and
+		(status ='3' Or status ='2'))) and examine_result!=4 and
+		delete_flag!=2
+	</sql>
+	
+	
+	
+	<select id="findCompanyNamePic" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select name,logo from tb_company where company_id=#value#
+	</select>
+	
+	<select id="findCommunityCompanyInfo" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select company_id as companyId,name,logo,star_score as
+		starScore,company_info as companyInfo from tb_company where
+		company_id=#value#
+	</select>
+	
+	<select id="selBrandTop4List" resultClass="java.util.HashMap">
+		select top $maxNum$ company_id as companyId,name,logo,star_score as starScore from
+		tb_company  t 
+		where company_id<include refid="Product.dataFilterComapny"/>
+		<include refid="Company.dataFilter"/>
+		<isNotEmpty property="ids">
+         and company_id not in($ids$)
+      </isNotEmpty> 
+	  <isEqual property="userId" compareValue="-1">
+         order by company_id desc
+      </isEqual>
+		<isEqual property="userId" compareValue="0">
+		   and order_field > 0 order by order_field asc
+		</isEqual>
+		 <isGreaterThan property="userId" compareValue="0">
+		     and  exists(select t1.tag_id  from tb_company_tag t1 where t1.delete_flag=1  and  t1.company_id=t.company_id
+	        and exists(select t2.tag_id  from tb_user_tag t2 where t1.tag_id=t2.tag_id and t2.delete_flag=1 and t2.user_id=#userId#))
+		 </isGreaterThan>
+	</select>
+
+
+    <select id="selBrandMoreList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        select company_id as companyId,name,logo,star_score as starScore from
+        (select row_number()over(order by company_id desc)rowId,*
+        from (select top ($startIndex$+$size$) * from tb_company t1 where 
+		company_id <include refid="Product.dataFilterComapny"/>
+        <include refid="Company.dataFilter"/>
+      <dynamic prepend="">
+            <isNotEmpty prepend="AND" property="keyword">
+                (NAME like '%'+#keyword#+'%' )
+            </isNotEmpty>
+            
+      <isNotEmpty property="timeSpace">
+       <isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  regist_date >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  regist_date <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  regist_date >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  regist_date <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  regist_date >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  regist_date <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]> 
+       </isEqual> 
+      </isNotEmpty>
+      
+      <isNotEmpty property="tagIds" prepend="AND">
+         exists(select r.tag_id from tb_company_tag r where r.delete_flag!=2 and  r.company_id=t1.company_id AND r.tag_id in($tagIds$))
+      </isNotEmpty>
+      
+        </dynamic>
+        order by company_id desc) as t
+        )as tt
+        where rowId>$startIndex$
+    </select>
+
+
+	<select id="selBrandMoreListCount" resultClass="Long">
+		select count(*) from tb_company t1 where company_id <include refid="Product.dataFilterComapny"/>
+		 <include refid="Company.dataFilter"/>
+		 <dynamic prepend="">
+            <isNotEmpty prepend="AND" property="keyword">
+                (NAME like '%'+#keyword#+'%' )
+            </isNotEmpty>
+            
+      <isNotEmpty property="timeSpace">
+       <isEqual prepend="AND" property="timeSpace" compareValue="1">
+       <![CDATA[  regist_date >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 0) and  regist_date <=dateadd(ms,-3,DATEADD(DAY, DATEDIFF(DAY,0,getdate()), 1)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="2">
+       <![CDATA[  regist_date >=DATEADD(wk, DATEDIFF(wk,0,getdate()), 0) and  regist_date <=dateadd(ms,-3,DATEADD(wk, DATEDIFF(wk,0,getdate()), 7)) ]]> 
+       </isEqual>
+       
+       <isEqual prepend="AND" property="timeSpace" compareValue="3">
+       <![CDATA[  regist_date >=DATEADD(mm, DATEDIFF(m,0,getdate()),0) and  regist_date <=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,getdate())+1, 0)) ]]> 
+       </isEqual> 
+      </isNotEmpty>
+      
+      <isNotEmpty property="tagIds" prepend="AND">
+         exists(select r.tag_id from tb_company_tag r where r.delete_flag!=2 and  r.company_id=t1.company_id AND r.tag_id in($tagIds$))
+      </isNotEmpty>
+      
+        </dynamic>
+	</select>
+
+	<select id="selCooperatorList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select company_id as companyId,[name],logo,star_score as starScore,
+		browse_count as browseCount,
+		convert(nvarchar,regist_Date,111) as registDate
+		from (select *,ROW_NUMBER() over (order by company_id) as rank from
+		tb_company) as t
+		where t.rank between #beginIndex# and #endIndex#
+	</select>
+
+	<select id="selCooperatorDetail" parameterClass="Long"
+		resultClass="java.util.HashMap">
+		select company_id as companyId, [name], logo, star_score as starScore,
+		convert(nvarchar,regist_Date,111) as registDate, company_Info as
+		companyInfo,
+		IsNull(browse_count,0) as browseCount, address, email, company_Type as companyType,
+		linkman, linkman_Tel as linkmanTel, companyURL
+		from tb_company
+		where company_Id=#value#
+		<!--<dynamic prepend="WHERE"> <isNotEmpty prepend="AND" property="keyword"> 
+			(company_Id = #keyword#) </isNotEmpty> </dynamic> -->
+	</select>
+
+	<update id="updateCompanyBrowseCount" parameterClass="Long">
+		update
+		tb_company set browse_count=IsNull(browse_count,0)+1 where
+		company_id=#value#
+	</update>
+
+</sqlMap>

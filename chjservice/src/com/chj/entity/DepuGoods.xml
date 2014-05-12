@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>   
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="DepuGoods">
+	<typeAlias alias="DepuGoods" type="com.chj.entity.DepuGoods" />
+
+	<select id="queryShopType" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_product_shop_category where
+		shop_id=#DepuShopId# and
+		name=#parentCategory# and parent_id=#parentId#
+	</select>
+
+	<select id="findProductInfo" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_product where company_id=#DeouCompanyId#
+		and
+		name=#productName# and product_number=#productNumber#
+	</select>
+
+	<update id="updateProductInfo" parameterClass="java.util.HashMap">
+		update tb_product
+		set create_time=#CreateTime#,content=#content# where
+		product_id=#productId#
+	</update>
+	<update id="updateProductSkuInfo" parameterClass="java.util.HashMap">
+		update
+		tb_product_sku set price=#price#,old_price=#oprice#,status=#status#
+		where product_id=12
+	</update>
+
+	<insert id="InsertShopType" parameterClass="java.util.HashMap">
+		insert into
+		tb_product_shop_category(name,parent_id,shop_id,creation_time)
+		values(#parentCategory#,#parentId#,#DepuShopId#,(select getdate()));
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+	<insert id="addProductInfo" parameterClass="java.util.HashMap">
+		insert into
+		tb_product(name,content,company_id,product_number,create_time)
+		values(#productName#,#content#,#DeouCompanyId#,#productNumber#,#CreateTime#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+	<insert id="addproductSku" parameterClass="java.util.HashMap">
+		insert into tb_product_sku(product_id,price,status,old_price)
+		values(#productId#,#price#,#status#,#oprice#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+	<insert id="addShopProduct" parameterClass="java.util.HashMap">
+		insert into tb_company_shop_product(company_shop_id,
+		product_id,product_shop_category_id)
+		values(#DepuShopId#,#productId#,#categoryId#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+
+	<insert id="addShopProductSku" parameterClass="java.util.HashMap">
+		insert into
+		tb_company_shop_product_sku(company_shop_product_id,product_sku_id,stock)
+		values(#shopProductId#,#productSkuId#,10000000)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+	<insert id="addProductImage" parameterClass="java.util.HashMap">
+		insert into tb_product_image(product_id,file_path,file_name)
+		values(#productId#,#image#,#productName#)
+		<selectKey resultClass="Long" type="post">
+			select @@IDENTITY as
+			value
+		</selectKey>
+	</insert>
+	<select id="findTheCategory" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_product_shop_category where
+		shop_id=#companyShopId# and
+		parent_id=#parentId# and delete_flag=1
+	</select>
+	<select id="findParentProductList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select * from tb_company_shop_product sp where
+		company_shop_id=#companyShopId# and delete_flag!=2
+		and exists(select *
+		from tb_product p where sp.product_id=p.product_id
+		and delete_flag!=2)
+		AND EXISTS(SELECT *
+		from tb_company_shop_product_sku ps where
+		sp.company_shop_product_id=ps.company_shop_product_id and
+		delete_flag!=2) and (
+		product_shop_category_id=#categoryId# or
+		product_shop_category_id in
+		(select product_shop_category_id from
+		tb_product_shop_category where
+		parent_id=#categoryId# and
+		shop_id=#companyShopId#))
+	</select>
+	<select id="findProductSkuList" parameterClass="java.util.HashMap"
+		resultClass="java.util.HashMap">
+		select p.name,pp.* from (select * from tb_product where
+		product_id=#product_id# and delete_flag!=2) p inner join (select
+		sps.company_shop_product_sku_id,sps.stock,ps.* from
+		(select top 1
+		product_sku_id,stock,company_shop_product_sku_id from
+		tb_company_shop_product_sku
+		where
+		company_shop_product_id=#company_shop_product_id# and
+		delete_flag!=2)
+		sps,tb_product_sku ps where
+		ps.product_sku_id=sps.product_sku_id and
+		ps.delete_flag!=2)as pp on
+		p.product_id=pp.product_id order by p.name
+	</select>
+
+</sqlMap>

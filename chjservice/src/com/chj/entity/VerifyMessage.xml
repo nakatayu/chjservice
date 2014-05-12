@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="VerifyMessage">
+	<typeAlias alias="verifyMessage" type="com.chj.entity.VerifyMessage"/>
+	<resultMap class="VerifyMessage" id="resulted">
+		<result property="verifyMessageId" column="verify_message_id"/>
+		<result property="phone" column="phone" />
+		<result property="message" column="message" />
+		<result property="createTime" column="create_time" />
+		<result property="failTime" column="fail_time" />
+		<result property="status" column="status" />
+	</resultMap>
+	<insert id="addVerifyMessage" parameterClass="VerifyMessage">
+		INSERT INTO	tb_verify_message(phone,create_time,fail_time,status,message) VALUES(#phone#, #createTime#,#failTime#,#status#,#message#)
+		<selectKey keyProperty="verifyMessageId" resultClass="long"
+			type="post">
+			select @@IDENTITY as value
+		</selectKey>
+	</insert>
+	<select id="selVerifyMessage" parameterClass="VerifyMessage" resultMap="resulted">
+	SELECT * FROM tb_verify_message WHERE phone=#phone# AND message=#message# AND fail_time>#failTime#
+	</select>
+	<update id="updVerifyMessage" parameterClass="VerifyMessage">
+	UPDATE tb_verify_message SET status=#status# WHERE verify_message_id=#verifyMessageId# 
+	</update>
+</sqlMap>
+
+

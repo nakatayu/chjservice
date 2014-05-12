@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">  
+  
+<sqlMap namespace="UserServer">  
+  
+    <typeAlias alias="UserServer" type="com.chj.entity.UserServer"/>  
+  
+    <resultMap class="UserServer" id="UserResult">  
+        <result property="id" column="Id"/>      
+        <result property="userName" column="name"/>    
+        <result property="passWord" column="pwd"/>    
+    </resultMap>
+       
+    <select id="loginUserServer" parameterClass="UserServer" resultMap="UserResult">  
+        SELECT *  FROM USERS WHERE NAME=#userName# AND PWD=#passWord#        	
+    </select>  
+       
+	<!-- 
+	 <insert id="addUserServer" parameterClass="UserServer">    
+  		INSERT INTO TB_USER_PHONE(USER_NAME, PASSWORD)   
+        VALUES(#userName#,#passWord#)     
+        <selectKey keyProperty="id" resultClass="long">  
+             select last_insert_id()  
+        </selectKey>  
+    </insert> 
+	 -->
+    
+  
+</sqlMap> 

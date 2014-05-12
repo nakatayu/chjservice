@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="Order">
+
+	<typeAlias alias="Order" type="com.chj.entity.Order" />
+
+	<resultMap class="Order" id="OrderRes">
+		<result property="orderId" column="order_id" />
+		<result property="flowNo" column="flow_no" />
+		<result property="userId" column="user_id" />
+		<result property="orderTime" column="order_time" />
+		<result property="status" column="status" />
+		<result property="money" column="money" />
+		<result property="shopId" column="shop_id" />
+		<result property="name" column="name" />
+		<result property="address" column="address" />
+		<result property="phone" column="phone" />
+		<result property="payType" column="pay_type" />
+		<result property="sendType" column="send_type" />
+		<result property="sendCost" column="send_cost" />
+		<result property="serviceCost" column="service_cost" />
+		<result property="total" column="total" />
+		<result property="sendDate" column="send_date" />
+		<result property="info" column="info" />
+		<result property="payStatus" column="pay_status" />
+	</resultMap>
+
+
+	<select id="findOrderFlowNo" parameterClass="String"
+		resultClass="String">
+		select top 1 flow_no from tb_order where order_day=#value#
+		order by order_id desc
+	</select>
+
+	<select id="selectUserOrderList" parameterClass="java.util.HashMap"
+		resultMap="OrderRes">
+		select * from
+		(select row_number()over(order by order_time desc)rowId,*
+		from (select top ($startIndex$+$size$) * from tb_order t
+		where t.delete_flag=1 and
+		t.user_id=#userId# and exists(select t1.order_id from tb_order_item t1
+		where t1.order_id=t.order_id
+		and exists(select t2.product_id from
+		tb_product t2 where
+		t2.product_id=t1.product_id))
+		<dynamic prepend="">
+			<isEqual prepend="AND" property="type" compareValue="0">
+				pay_status !='2'
+			</isEqual>
+			<isEqual prepend="AND" property="type" compareValue="1">
+				pay_status = '2'
+			</isEqual>
+		</dynamic>
+		order by order_time desc) ss
+		) sss
+		where sss.rowId > $startIndex$
+	</select>
+
+	<select id="selectUserOrderListCount" parameterClass="java.util.HashMap"
+		resultClass="Long">
+		select count(*) from tb_order t
+		where t.delete_flag=1 and
+		t.user_id=#userId# and
+		exists(select t1.order_id from tb_order_item t1 where
+		t1.order_id=t.order_id
+		and exists(select t2.product_id from tb_product
+		t2 where 
+		t2.product_id=t1.product_id))
+		<dynamic prepend="">
+			<isEqual prepend="AND" property="type" compareValue="0">
+				pay_status !='2'
+			</isEqual>
+			<isEqual prepend="AND" property="type" compareValue="1">
+				pay_status = '2'
+			</isEqual>
+		</dynamic>
+	</select>
+
+	<delete id="cancelUserOrder" parameterClass="java.util.HashMap">
+		update tb_order set
+		status='6'
+		where user_id=#userId# and order_id=#orderId#
+	</delete>
+
+	<select id="selectOrderById" parameterClass="Long" resultMap="OrderRes">
+		select * from tb_order where order_id=#orderId#
+	</select>
+
+	<insert id="insertOrder" parameterClass="Order">
+		INSERT INTO
+		tb_order(flow_no,user_id,order_time,status,money,shop_id,name,address,
+		phone,pay_type,send_type,send_cost,service_cost,total,order_day,
+		<dynamic prepend="">
+			<isNotEmpty prepend="" property="sendDate">
+				send_date,
+			</isNotEmpty>
+		</dynamic>
+		info,pay_status)
+		VALUES(#flowNo#,#userId#,#orderTime#,#status#,#money#,#shopId#,#name#,#address#,
+		#phone#,#payType#,#sendType#,#sendCost#,#serviceCost#,#total#,#orderDay#,
+		<dynamic prepend="">
+			<isNotEmpty prepend="" property="sendDate">
+				#sendDate#,
+			</isNotEmpty>
+		</dynamic>
+		#info#,#payStatus#)
+		<selectKey keyProperty="orderId" resultClass="Long">
+			select
+			@@IDENTITY as orderId
+		</selectKey>
+	</insert>
+	<select id="findOrdedId" parameterClass="Order" resultClass="Long">
+		select order_id from tb_order where flow_no=#flowNo# and
+		user_id=#userId#
+	</select>
+	<update id="updateOrderStatus" parameterClass="java.util.HashMap">
+		update tb_order
+		set $columName$=#columValue# where flow_no=#flowNo#
+	</update>
+	<select id="selectShopMonthCount" parameterClass="Long"
+		resultClass="Long">
+		select COUNT(*) from tb_order where shop_id=#value# and status ='5'
+		<![CDATA[ and order_time <getdate() and order_time >=DATEADD(DAY, DATEDIFF(DAY,0,getdate()), -30) ]]>
+	</select>
+
+</sqlMap>

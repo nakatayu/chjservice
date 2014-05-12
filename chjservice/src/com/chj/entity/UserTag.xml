@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+    <sqlMap namespace="UserTag">
+    <typeAlias alias="UserTag" type="com.chj.entity.UserTag"/>
+  
+    <resultMap class="UserTag" id="UserTagRes">
+    <result property="userTagId" column="user_tag_id"/>
+    <result property="userId" column="user_id"/>
+    <result property="tagId" column="tag_id"/>
+    <result property="addTime" column="add_time"/>
+    <result property="status" column="status"/>  
+    </resultMap>
+    
+    <select id="selUserTagByUserIdTagId"  parameterClass="UserTag" resultMap="UserTagRes">
+       select * from tb_user_tag where user_id=#userId# and tag_id=#tagId#
+    </select>
+    
+     <select id="selAllLableType"  resultClass="java.util.HashMap">
+          select tag_id as tagId,tag_name as tagName from tb_tag t where t.parent_id in(1,2) and
+		  exists(select tag_id from tb_tag s where s.parent_id =t.tag_id)
+    </select>
+    <select id="selSecondLable"  parameterClass="Long" resultClass="java.util.HashMap">
+         select tag_id as tagId,tag_name as tagName from tb_tag s where s.parent_id =#value#
+    </select>
+    
+     <select id="selHotLable"   resultClass="java.util.HashMap">
+         select top 20 tag_id as tagId,tag_name as tagName from tb_tag s where s.parent_id not in(0,1,2) order by click_count desc
+    </select>
+    
+    <select id="findUserLableSecondList"  parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+        select tag_id as tagId,tag_name as tagName from tb_tag u
+          where u.delete_flag=1 and u.parent_id>0 and  u.parent_id=#parentId# and
+           exists(select parent_id  from tb_tag s where s.delete_flag=1 and s.parent_id = u.tag_id and exists(select  user_id from tb_user_tag t where t.delete_flag=1 and user_id=#userId# and t.tag_id=s.tag_id))
+  </select>
+    <select id="finduserThreelableList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    select tag_id as tagId,tag_name as tagName  from tb_tag s where s.delete_flag=1 and s.parent_id=#parentId# 
+    and exists(select  user_id from tb_user_tag t where t.delete_flag=1 and user_id=#userId# and t.tag_id=s.tag_id)
+    </select>
+      <select id="selUserAllLable"  parameterClass="Long" resultClass="java.util.HashMap">
+          select tag_id as tagId,tag_name as tagName from tb_tag t where exists(select s.tag_id from tb_user_tag s where s.user_id=#value# and s.tag_id = t.tag_id)
+    </select>
+  
+    
+      <select id="findUserLableFirstList"  parameterClass="Long" resultClass="java.util.HashMap">
+           select tag_id as tagId,tag_name as tagName from tb_tag u1 where u1.delete_flag=1 and u1.parent_id=0 and exists(
+      select tag_id from tb_tag u
+          where u.delete_flag=1 and u.parent_id>0 and u.parent_id=u1.tag_id and
+           exists(select parent_id  from tb_tag s where s.delete_flag=1 and s.parent_id = u.tag_id and exists(select  user_id from tb_user_tag t where t.delete_flag=1 and user_id=#value# and t.tag_id=s.tag_id))) 
+    </select>
+    
+    
+    <delete id="delUserTag" parameterClass="java.util.HashMap">
+    delete from tb_user_tag where user_id=#userId# and tag_id=#tagId#
+    </delete>
+    
+     <insert id="insertUserTag" parameterClass="UserTag">
+		INSERT  INTO tb_user_tag(user_id,tag_id,add_time,status) VALUES(#userId#, #tagId#,#addTime#,#status#) 
+		
+		<selectKey keyProperty="userTagId" resultClass="Long" type="post">
+			select @@IDENTITY as value
+		</selectKey>
+	</insert>
+    
+    </sqlMap>

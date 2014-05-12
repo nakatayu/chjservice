@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="OrderFlow">
+
+	<typeAlias alias="OrderFlow" type="com.chj.entity.OrderFlow" />
+	
+	<resultMap class="OrderFlow" id="OrderFlowRes">
+	  <result property="orderFlowId" column="order_flow_id"/>
+	  <result property="orderId" column="order_id"/>
+      <result property="userId" column="user_id"/>
+      <result property="statusValue" column="status_value"/>
+      <result property="createDate" column="create_date"/>
+      <result property="name" column="name"/>
+      
+     </resultMap>
+	
+	<select id="selectOrderFlow" parameterClass="Long" resultMap="OrderFlowRes">
+	    select * from tb_order_flow where order_id=#value# order by create_date desc
+	</select>
+	
+<insert id="insertOrderFlow" parameterClass="OrderFlow">
+		INSERT INTO tb_order_flow(order_id,user_id,name,status_value,create_date)
+		VALUES(#orderId#,#userId#,#name#,#statusValue#,#createDate#)
+		<selectKey  resultClass="Long" type="post">
+			select @@IDENTITY as value
+		</selectKey>
+</insert>
+
+
+</sqlMap>

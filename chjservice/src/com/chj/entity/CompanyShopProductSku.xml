@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="CompanyShopProductSku">
+
+	<typeAlias alias="CompanyShopProductSku" type="com.chj.entity.CompanyShopProductSku" />
+	<resultMap class="CompanyShopProductSku" id="CompanyShopProductSkuResMap">
+		<result property="companyShopProductSkuId" column="company_shop_product_sku_id" />
+		<result property="companyShopProductId" column="company_shop_product_id" />
+		<result property="stock" column="stock"/>
+		<result property="productSkuId" column="product_sku_id"/>
+	</resultMap>
+	<select id="selectCompanyShopProductSku" parameterClass="Long" resultMap="CompanyShopProductSkuResMap">
+		select * from tb_company_shop_product_sku where company_shop_product_id = #value# and delete_flag!=2
+	</select>
+	<select id="selectProductAttributeValueIdList" parameterClass="Long" resultClass="Long">
+		select product_attribute_value_id from tb_product_attribute_value_sku where delete_flag!=2 and product_sku_id = #value#
+	</select>
+	<select id="findFirstPromoteProduct" resultClass="java.util.HashMap">
+	select top 24 * from tb_company_shop_product t0 where t0.first_extend>=1 and delete_flag!=2
+	and exists(select y.company_shop_product_id from tb_company_shop_product_sku y where y.company_shop_product_id=t0.company_shop_product_id and y.delete_flag=1)
+    and exists(select t1.company_id from tb_product t1 where t0.product_id=t1.product_id and t1.company_id!=254)
+ order by first_extend asc
+	</select>
+	<select id="findCompanyShopProductSkuStock" parameterClass="Long" resultClass="Object">
+	select stock from tb_company_shop_product_sku where company_shop_product_sku_id=#value#
+	</select>
+</sqlMap>

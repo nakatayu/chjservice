@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+  
+<!DOCTYPE sqlMap         
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"         
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="TopicComment">
+
+	<typeAlias alias="TopicComment" type="com.chj.entity.TopicComment" />
+	<resultMap class="TopicComment" id="TopicCommentRes">
+		<result property="topicCommentId" column="topic_comment_id" />
+		<result property="userId" column="user_id" />
+		<result property="content" column="content" />
+		<result property="toContent" column="to_content" />
+		<result property="commentTime" column="comment_time" />
+		<result property="topicId" column="topic_id" />
+		<result property="toUserId" column="to_user_id"/>
+		<result property="headImage" column="user_id" select="TopicComment.selectHeadImage"/>
+		<result property="nickName" column="user_id" select="TopicComment.selectNickName"/>
+		<result property="toNickName" column="to_user_id" select="TopicComment.selectNickName"/>
+	</resultMap>
+	
+<select id="findTopicCommentByTopicId" parameterClass="java.util.HashMap"
+		resultMap="TopicCommentRes">
+ select * from 
+ (select row_number()over(order by topic_comment_id desc)rowId,*
+ from (select top ($startIndex$+$size$)  * from tb_topic_comment t
+    <dynamic prepend="Where">
+   			 <isNotEmpty prepend="AND" property="topicId">
+     			t.topic_id=#topicId#
+   			 </isNotEmpty>
+	</dynamic>
+ order by topic_comment_id desc) ss
+ ) sss
+ where sss.rowId > $startIndex$
+</select>
+
+<select id="findTopicCommentCountByTopicId" parameterClass="java.util.HashMap"
+		resultClass="Long">
+ select  count(*) from tb_topic_comment t
+    <dynamic prepend="Where">
+   			 <isNotEmpty prepend="AND" property="topicId">
+     			t.topic_id=#topicId#
+   			 </isNotEmpty>
+	</dynamic>
+</select>
+<select id="selectNickName" parameterClass="Long" resultClass="String">
+select nick_name from tb_user where user_id=#value#
+</select>
+<select id="selectHeadImage" parameterClass="Long" resultClass="String">
+select head_picture from tb_user where user_id=#value#
+</select>
+
+<insert id="insertTopicComment" parameterClass="TopicComment" >
+	insert into tb_topic_comment(topic_id,user_id,content,comment_time,to_content
+	 <isNotEmpty prepend="," property="toUserId">
+     			to_user_id
+   	</isNotEmpty>) 
+   	values(#topicId#,#userId#,#content#,#commentTime#,#toContent#
+   	<isNotEmpty prepend="," property="toUserId">
+     			#toUserId#
+   	</isNotEmpty>)
+   	 <selectKey  resultClass="Long" type="post">
+			select @@IDENTITY as value
+	</selectKey>
+</insert>
+	
+  
+</sqlMap>
